@@ -1,9 +1,8 @@
 """Document model."""
 
 import enum
-from sqlalchemy import Column, Enum, ForeignKey, String, Text, Integer
+from sqlalchemy import Column, Enum, ForeignKey, String, Text, Integer, UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 
 from .base import BaseModel
 
@@ -21,7 +20,7 @@ class Document(BaseModel):
     __tablename__ = "documents"
 
     user_id = Column(
-        PostgreSQLUUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

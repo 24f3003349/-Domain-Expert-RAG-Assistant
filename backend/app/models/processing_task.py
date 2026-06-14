@@ -3,8 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, UUID, JSON
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
@@ -25,13 +24,13 @@ class ProcessingTask(BaseModel):
     task_type = Column(String(50), nullable=False)  # e.g., "process_document"
     status = Column(String(20), nullable=False, default="PENDING")
     progress = Column(String(10), nullable=True)  # "0-100"
-    result = Column(JSONB, nullable=True)  # Task result data
+    result = Column(JSON, nullable=True)  # Task result data
     error_message = Column(Text, nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
     retry_count = Column(String(10), nullable=False, default="0")
     max_retries = Column(String(10), nullable=False, default="3")
-    task_metadata = Column(JSONB, nullable=True)  # Additional task metadata
+    task_metadata = Column(JSON, nullable=True)  # Additional task metadata
 
     # Relationships
     document = relationship("Document", back_populates="processing_tasks")

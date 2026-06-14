@@ -1,7 +1,6 @@
 """Document chunk model for storing text fragments."""
 
-from sqlalchemy import Column, String, Text, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel

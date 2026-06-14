@@ -7,6 +7,8 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
+from sqlalchemy import event
+from sqlalchemy.pool import StaticPool, Pool
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -17,10 +19,15 @@ from app.models.base import Base
 
 settings = get_settings()
 
-# Test database URL
-TEST_DATABASE_URL = settings.get_database_url().replace(
-    f"/{settings.DB_NAME}", f"/{settings.DB_NAME}_test"
-)
+# Test database URL (using SQLite in-memory for zero-dependency local testing)
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+# Enable foreign keys for SQLite
+@event.listens_for(Pool, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 
 @pytest.fixture(scope="session")
@@ -36,6 +43,8 @@ async def test_engine():
     """Create async engine for testing."""
     engine = create_async_engine(
         TEST_DATABASE_URL,
+        poolclass=StaticPool,
+        connect_args={"check_same_thread": False},
         echo=True,
         future=True,
     )
@@ -56,12 +65,18 @@ async def test_engine():
 @pytest_asyncio.fixture
 async def test_db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a database session for testing."""
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
+
     async_session = sessionmaker(
-        test_engine, class_=AsyncSession, expire_on_commit=False
+        bind=connection, class_=AsyncSession, expire_on_commit=False
     )
 
     async with async_session() as session:
         yield session
+
+    await transaction.rollback()
+    await connection.close()
 
 
 @pytest.fixture
