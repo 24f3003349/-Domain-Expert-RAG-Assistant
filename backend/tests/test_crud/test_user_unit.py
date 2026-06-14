@@ -3,7 +3,7 @@
 import pytest
 from app.crud.user import CRUDUser
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.auth import UserCreate, UserUpdate
 
 
 class TestUserModel:
@@ -13,29 +13,24 @@ class TestUserModel:
         """Test creating a user model instance."""
         user_data = {
             "email": "test@example.com",
-            "password_hash": "hashed_password",
-            "full_name": "Test User",
-            "is_active": True,
-            "is_superuser": False,
+            "hashed_password": "hashed_password",
         }
 
         # Create user instance (without saving to DB)
         user = User(**user_data)
 
         assert user.email == "test@example.com"
-        assert user.full_name == "Test User"
+        assert user.hashed_password == "hashed_password"
         assert user.is_active is True
-        assert user.is_superuser is False
         assert user.id is None  # Not saved yet
 
     def test_user_repr(self):
         """Test user string representation."""
         user = User(
             email="test@example.com",
-            password_hash="hash",
-            full_name="Test User"
+            hashed_password="hash",
         )
-        expected = "<User(email=test@example.com, full_name=Test User)>"
+        expected = "<User(id=None, email=test@example.com)>"
         assert repr(user) == expected
 
 
@@ -47,27 +42,22 @@ class TestUserSchemas:
         user_data = {
             "email": "test@example.com",
             "password": "strongpassword",
-            "full_name": "Test User"
         }
 
         user_create = UserCreate(**user_data)
 
         assert user_create.email == "test@example.com"
         assert user_create.password == "strongpassword"
-        assert user_create.full_name == "Test User"
 
     def test_user_update_schema(self):
         """Test UserUpdate schema validation."""
         update_data = {
-            "full_name": "Updated Name",
-            "is_active": False
+            "email": "updated@example.com",
         }
 
         user_update = UserUpdate(**update_data)
 
-        assert user_update.full_name == "Updated Name"
-        assert user_update.is_active is False
-        assert user_update.email is None  # Not provided
+        assert user_update.email == "updated@example.com"
         assert user_update.password is None  # Not provided
 
 
@@ -89,7 +79,6 @@ class TestUserValidation:
             assert user_create.email == email
 
         # Invalid emails should raise validation error
-        import pytest
         from pydantic import ValidationError
 
         invalid_emails = [
@@ -130,7 +119,6 @@ class TestUserValidation:
         # Check that defaults are applied correctly in the model
         assert user_create.email == "test@example.com"
         assert user_create.password == "password123"
-        # is_active and is_superuser are handled at the database level
 
 
 def test_count_by_user_method():

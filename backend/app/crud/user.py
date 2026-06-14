@@ -76,6 +76,14 @@ class CRUDUser:
         # This method doesn't make sense for User CRUD, but keeping for consistency
         return 1 if user_id else 0
 
+    async def delete(self, db: AsyncSession, *, id: str) -> Optional[User]:
+        """Delete user."""
+        obj = await self.get(db, id=id)
+        if obj:
+            await db.delete(obj)
+            await db.commit()
+        return obj
+
 
 # Create a singleton instance
 user = CRUDUser()

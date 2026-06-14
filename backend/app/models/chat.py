@@ -1,8 +1,7 @@
 """Chat model."""
 
-from sqlalchemy import Column, ForeignKey, String, Text
+from sqlalchemy import Column, ForeignKey, String, Text, UUID
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 
 from .base import BaseModel
 
@@ -12,7 +11,7 @@ class Chat(BaseModel):
     __tablename__ = "chats"
 
     user_id = Column(
-        PostgreSQLUUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

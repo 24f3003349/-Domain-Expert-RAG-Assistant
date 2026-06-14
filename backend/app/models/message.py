@@ -1,8 +1,7 @@
 """Message model."""
 
 import enum
-from sqlalchemy import Column, Enum, ForeignKey, JSON, Text
-from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
+from sqlalchemy import Column, Enum, ForeignKey, JSON, Text, UUID
 from sqlalchemy.orm import relationship
 
 from .base import BaseModel
@@ -19,7 +18,7 @@ class Message(BaseModel):
     __tablename__ = "messages"
 
     chat_id = Column(
-        PostgreSQLUUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("chats.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -54,13 +53,13 @@ message_documents = Table(
     BaseModel.metadata,
     Column(
         "message_id",
-        PostgreSQLUUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("messages.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     Column(
         "document_id",
-        PostgreSQLUUID(as_uuid=True),
+        UUID(as_uuid=True),
         ForeignKey("documents.id", ondelete="CASCADE"),
         primary_key=True,
     ),

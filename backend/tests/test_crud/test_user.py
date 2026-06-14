@@ -1,5 +1,4 @@
-"""Tests for user CRUD operations."""
-
+import uuid
 import pytest
 
 from app.crud.user import user as user_crud
@@ -44,7 +43,7 @@ class TestUserCRUD:
 
     async def test_get_user_by_id_not_found(self, test_db_session):
         """Test getting a non-existent user by ID."""
-        fake_id = "00000000-0000-0000-0000-000000000000"
+        fake_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
         user = await user_crud.get(test_db_session, id=fake_id)
 
         assert user is None
@@ -69,6 +68,7 @@ class TestUserCRUD:
 
     async def test_update_user_password(self, test_db_session, test_user):
         """Test updating a user's password."""
+        original_hash = test_user.hashed_password
         new_password = "NewPassword123!"
         update_data = UserUpdate(password=new_password)
         updated_user = await user_crud.update(
@@ -78,7 +78,7 @@ class TestUserCRUD:
         )
 
         # Password should be hashed and different from original
-        assert updated_user.hashed_password != test_user.hashed_password
+        assert updated_user.hashed_password != original_hash
         # Verify the new password can be verified
         from app.core.security import verify_password
         assert verify_password(new_password, updated_user.hashed_password)
