@@ -6,7 +6,27 @@
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
-A production-grade, multi-tenant Retrieval-Augmented Generation (RAG) system engineered for high-stakes domains (Finance, Legal, Medical). The system features an event-driven ingestion pipeline, semantic document parsing, hybrid retrieval, and secure tenant-isolated vector searching.
+**Business Problem Statement**: Enterprise organizations in regulated sectors cannot safely query proprietary documents using public LLMs due to severe risks of data leakage across user bounds, compliance hallucinations, and gateway timeouts on large files.
+
+**Project Description**: A secure, multi-tenant RAG system built for document auditing. It allows users to query directories for answers grounded in verified source files with page-level citations, while guaranteeing absolute data privacy and zero gateway latency.
+
+---
+
+## 📈 System Design Objectives
+
+The architecture is engineered to optimize for the following performance and quality targets:
+*   **Context Retrieval Quality**: Maximizing context recall by combining semantic vector search, BM25 keyword search, and Cohere reranking.
+*   **Minimal Hallucinations**: Reducing response hallucination by strictly grounding the LLM's prompts in retrieved document chunks.
+*   **Low-Latency Streaming**: Utilizing FastAPI `StreamingResponse` to stream token deltas instantly to the client as they are generated.
+*   **Decoupled Workloads**: Offloading CPU-heavy parsing and indexing workloads to Celery workers to keep web threads responsive.
+
+---
+
+## 💼 Core Business Use Cases
+
+*   **⚖️ Legal Contract Review**: Instantly query thousands of active leases or NDAs to detect non-standard liability clauses.
+*   **📊 Financial Risk Audit**: Ground financial analysts' search in historical SEC filings and quarterly report tables.
+*   **🏥 Medical Guideline Lookup**: Provide clinical personnel with access to verified hospital policies and medical procedures.
 
 ---
 
@@ -27,119 +47,62 @@ graph TD
 
 ---
 
-## 🚀 Key Features
+## ⚡ Key Engineering Solutions
 
-*   **⚡ Decoupled Ingestion Pipeline**: Asynchronous PDF parsing, chunking, and indexing handled via **Celery & Redis** background workers. FastAPI remains non-blocking and fully responsive.
-*   **🛡️ Secure Multi-Tenancy**: Data isolation at the vector database level. Embeddings are filtered by the authenticated user's `user_id` metadata before similarity calculation.
-*   **🔍 High-Precision Parsing**: Semantic text parsing using LlamaIndex's `SentenceSplitter` (1024 token chunks, 256 token overlap) ensuring sentence integrity is maintained.
-*   **🔗 Citation & Source Attributions**: Deduplicated citation metadata (filenames, page numbers) is injected into chat message responses in real-time.
-*   **🌐 Flexible Dual-Mode Engine**: Run completely local for free development (Ollama + ChromaDB) or deploy to cloud-native services in production (Google Gemini + Pinecone Serverless).
-*   **💾 Database-Agnostic Orm**: Uses standard SQLAlchemy `UUID` and `JSON` types enabling seamless SQLite support for local test suites while running PostgreSQL in production.
+*   **🔒 Tenant Data Isolation**: Enforces user-level metadata filters (`user_id == current_user`) inside vector search queries to guarantee no cross-user data leakage.
+*   **⚙️ Decoupled Task Ingestion**: Offloads PDF parsing, sentence-aware chunking, and embedding generation to **Celery & Redis** background workers to keep the API gateway responsive.
+*   **⚡ Cryptographic Deduplication**: Hashes file streams using SHA-256 before upload. Matches existing hashes in Postgres to prevent redundant vector storage and duplicate API fees.
+*   **📑 Audit-Ready Citations**: Extracts and streams source metadata (filenames, page numbers) in real-time before text generation begins.
+*   **🧪 Zero-Dependency Testing**: Features an in-memory SQLite (`sqlite+aiosqlite`) test runner with connection-level transaction rollbacks, allowing fast, isolated offline test execution.
 
 ---
 
 ## 🛠️ Tech Stack
 
 *   **Backend**: FastAPI, Python 3.12, SQLAlchemy 2.0, Alembic
-*   **Frontend**: Next.js 14 (App Router), Tailwind CSS, Framer Motion, Zustand
-*   **Task Management**: Celery, Redis
-*   **Data Stores**: PostgreSQL (relational metadata), ChromaDB / Pinecone (vector index), MinIO (S3-compatible object storage)
-*   **RAG Engine**: LlamaIndex, Ollama Embeddings, Google Gemini AI
-
----
-
-## 📂 Project Directory Structure
-
-```text
-├── /backend
-│   ├── /app
-│   │   ├── /api            # Controllers, JWT middleware, versioned endpoints
-│   │   ├── /core           # Configurations, Database engines, Security helpers
-│   │   ├── /crud           # Repository layer abstracting database queries
-│   │   ├── /models         # Relational database tables (User, Document, Chat, Message)
-│   │   ├── /schemas        # Pydantic schemas for data serialization/validation
-│   │   └── /services       # Business services (RAG, Storage, Ingestion)
-│   ├── /worker             # Celery task definitions
-│   ├── /tests              # Zero-dependency local SQLite test suite
-│   ├── pyproject.toml      # Project configurations and dependencies
-│   └── pytest.ini          # Pytest configurations
-├── /frontend               # Next.js UI source code
-└── /infrastructure         # Docker Compose configurations (Postgres, Redis, MinIO)
-```
+*   **Frontend**: Next.js 14, Tailwind CSS, Framer Motion, Zustand
+*   **Task Queue**: Celery, Redis
+*   **Storage**: PostgreSQL (metadata), ChromaDB / Pinecone (vectors), MinIO (S3-compatible)
+*   **AI Engine**: LlamaIndex, Ollama, Google Gemini
 
 ---
 
 ## 🚦 Getting Started
 
-### 1. Prerequisites
-Ensure you have the following installed:
-*   Python 3.12+
-*   Node.js 18+
-*   Docker & Docker Compose
-
-### 2. Environment Configuration
-Copy the example environment file:
+### 1. Configure Environment
+Copy `.env` file and set keys (`SECRET_KEY`, `GEMINI_API_KEY`, `PINECONE_API_KEY`):
 ```bash
 cp infrastructure/.env.example infrastructure/.env
 ```
-Fill in your API credentials:
-*   `SECRET_KEY`: Security JWT secret key.
-*   `GEMINI_API_KEY`: API token from Google AI Studio.
-*   `PINECONE_API_KEY`: Serverless Vector DB token.
-*   `COHERE_API_KEY`: API token for Cohere reranking.
 
-### 3. Launch Docker Infrastructure
+### 2. Start Services
 ```bash
-cd infrastructure
-docker-compose up -d
-```
-This launches:
-*   **PostgreSQL** (port `5432`)
-*   **Redis** (port `6379`)
-*   **MinIO Console** (port `9001`, Storage port `9000`)
+# Start Docker (Postgres, Redis, MinIO)
+cd infrastructure && docker-compose up -d
 
-### 4. Setup Backend Service
-```bash
+# Start Backend Gateway
 cd ../backend
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies and apply migrations
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 alembic upgrade head
-
-# Run FastAPI Gateway
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-In a new terminal window, start the Celery background worker:
-```bash
-source .venv/bin/activate
+# Start Celery Worker (In a new terminal)
 celery -A worker.celery_app worker --loglevel=info
 ```
 
-### 5. Setup Frontend
+### 3. Start Frontend
 ```bash
 cd ../frontend
-npm install
-npm run dev
+npm install && npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 
 ---
 
-## 🧪 Running Tests
+## 🧪 Verification & Testing
 
-The test suite runs entirely local and doesn't require Docker or external services:
+Run the isolated test suite locally without Docker:
 ```bash
 cd backend
-source .venv/bin/activate
 pytest -v
 ```
-
----
-
-## 🔒 Security Best Practices
-*   **JWT Bearer Tokens**: All chats, documents, and messaging endpoints require a valid JWT bearer token.
-*   **Non-Blocking I/O**: High latency storage queries are offloaded to background threads using `asyncio.to_thread` to prevent thread pools blocking under load.
-*   **Transactional Testing**: Unit tests run inside isolated database transactions which are rolled back after execution, leaving the local SQLite database clean.
