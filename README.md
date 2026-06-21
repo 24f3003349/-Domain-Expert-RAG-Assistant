@@ -6,7 +6,7 @@
 [![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis)](https://redis.io/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
-**Business Problem Statement**: Enterprise organizations in regulated sectors cannot safely query proprietary documents using public LLMs due to severe risks of data leakage across user bounds, compliance hallucinations, and gateway timeouts on large files.
+> **Business Problem Statement**: *Enterprise organizations in regulated sectors cannot safely query proprietary documents using public LLMs due to severe risks of data leakage across user bounds, compliance hallucinations, and gateway timeouts on large files.*
 
 **Project Description**: A secure, multi-tenant RAG system built for document auditing. It allows users to query directories for answers grounded in verified source files with page-level citations, while guaranteeing absolute data privacy and zero gateway latency.
 
