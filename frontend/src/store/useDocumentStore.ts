@@ -77,7 +77,17 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       get().pollStatus(newDoc.id);
       return newDoc;
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Ingestion failure';
+      let message = 'Ingestion failure';
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        if (Array.isArray(detail)) {
+          message = detail.map((err: any) => err.msg).join(', ');
+        } else if (typeof detail === 'string') {
+          message = detail;
+        }
+      } else if (error.message) {
+        message = error.message;
+      }
       set({ error: message, isUploading: false });
       throw error;
     }

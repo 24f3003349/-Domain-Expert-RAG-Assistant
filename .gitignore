@@ -33,3 +33,6 @@ infrastructure/.env
 # OS
 .DS_Store
 Thumbs.db
+
+# Database
+backend/chroma_db/

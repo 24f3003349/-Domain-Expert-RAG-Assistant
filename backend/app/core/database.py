@@ -25,9 +25,9 @@ AsyncSessionLocal = sessionmaker(
     autoflush=False,
 )
 
-# Create sync engine for migrations
+# Create sync engine for migrations and sync sessions
 sync_engine = create_engine(
-    settings.get_database_url().replace("postgresql+asyncpg://", "postgresql://"),
+    settings.get_database_url().replace("postgresql+asyncpg://", "postgresql+pg8000://"),
     echo=settings.DEBUG,
     future=True,
 )

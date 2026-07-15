@@ -3,7 +3,7 @@
 import hashlib
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Response
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Response, BackgroundTasks
 from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,11 +11,10 @@ from app.api.deps import get_current_active_user, get_db
 from app.models.document import Document, DocumentStatus
 from app.models.user import User
 from app.schemas.document import DocumentCreate, DocumentResponse, DocumentUpdate
-from app.services.document_service import DocumentService
 from app.services.storage_service import StorageService
+from app.services.ingest.pipeline import process_document_pipeline
 
 router = APIRouter()
-document_service = DocumentService()
 storage_service = StorageService()
 
 
@@ -26,6 +25,7 @@ storage_service = StorageService()
     dependencies=[Depends(RateLimiter(times=10, minutes=5))]
 )
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -78,7 +78,7 @@ async def upload_document(
 
     # Queue for processing
     try:
-        await document_service.queue_for_processing(document.id)
+        background_tasks.add_task(process_document_pipeline, str(document.id))
     except Exception as e:
         # Log error but don't fail the upload
         print(f"Failed to queue document for processing: {e}")
@@ -157,6 +157,7 @@ async def delete_document(
 @router.post("/{document_id}/process", response_model=DocumentResponse)
 async def process_document(
     document_id: str,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ) -> Any:
@@ -179,7 +180,7 @@ async def process_document(
         )
 
     try:
-        await document_service.queue_for_processing(document_id)
+        background_tasks.add_task(process_document_pipeline, document_id)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -118,7 +118,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/chats/${activeChatId}/messages?stream=true`, {
+      let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      if (!apiBaseUrl.includes('/api/v1')) {
+        apiBaseUrl = `${apiBaseUrl.replace(/\/$/, '')}/api/v1`;
+      }
+      
+      const response = await fetch(`${apiBaseUrl}/chats/${activeChatId}/messages?stream=true`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

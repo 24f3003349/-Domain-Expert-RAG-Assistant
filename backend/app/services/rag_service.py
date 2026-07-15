@@ -1,16 +1,21 @@
-"""RAG service for document Q&A using Local Ollama and ChromaDB."""
+"""RAG service for document Q&A using Google Gemini / Pinecone or Local Ollama / ChromaDB."""
 
 from typing import AsyncGenerator, List, Union, Dict, Any
-
 import os
 import json
 import chromadb
+from pinecone import Pinecone
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.core.vector_stores.types import MetadataFilters, MetadataFilter, FilterOperator
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.vector_stores.chroma import ChromaVectorStore
+
+# Cloud providers
+from llama_index.llms.gemini import Gemini
+from llama_index.embeddings.gemini import GeminiEmbedding
+from llama_index.vector_stores.pinecone import PineconeVectorStore
 
 from app.core.config import get_settings
 from app.services.storage_service import StorageService
@@ -19,33 +24,55 @@ settings = get_settings()
 
 
 class RAGService:
-    """Service for Retrieval-Augmented Generation using Local Ollama & ChromaDB."""
+    """Service for Retrieval-Augmented Generation using Cloud APIs or Local Containers."""
 
     def __init__(self):
         """Initialize the RAG service."""
-        # --- LOCAL LLM (OLLAMA) ---
-        self.llm = Ollama(
-            model="llama3.2:1b", 
-            request_timeout=120.0
-        )
-        # --- LOCAL EMBEDDINGS ---
-        self.embed_model = OllamaEmbedding(
-            model_name="nomic-embed-text"
-        )
+        # --- CLOUD SETUP (GEMINI + PINECONE) ---
+        if settings.ENVIRONMENT == "production":
+            # 1. Initialize Gemini LLM & Gemini Embeddings
+            self.llm = Gemini(
+                model="models/gemini-1.5-flash",
+                api_key=settings.GEMINI_API_KEY
+            )
+            self.embed_model = GeminiEmbedding(
+                model_name="models/text-embedding-004",
+                api_key=settings.GEMINI_API_KEY
+            )
+            # 2. Connect to Pinecone Cloud Vector DB
+            pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+            pinecone_index = pc.Index(settings.PINECONE_INDEX_NAME)
+            self.vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
+            self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
 
-        # --- LOCAL VECTOR STORAGE (CHROMADB) ---
-        # Data is persisted locally in the backend/chroma_db directory
-        db_path = os.path.join(os.getcwd(), "chroma_db")
-        db = chromadb.PersistentClient(path=db_path)
-        chroma_collection = db.get_or_create_collection("aura_intelligence")
-        
-        self.vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+        # --- LOCAL SETUP (OLLAMA + CHROMADB) ---
+        else:
+            ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
-        # Initialize storage service (MinIO)
+            # --- LOCAL LLM (OLLAMA) ---
+            self.llm = Ollama(
+                model="llama3.2:1b", 
+                base_url=ollama_url,
+                context_window=4096,
+                additional_kwargs={"num_ctx": 4096},
+                request_timeout=120.0
+            )
+            # --- LOCAL EMBEDDINGS ---
+            self.embed_model = OllamaEmbedding(
+                model_name="nomic-embed-text",
+                base_url=ollama_url
+            )
+
+            # --- LOCAL VECTOR STORAGE (CHROMADB) ---
+            db_path = os.path.join(os.getcwd(), "chroma_db")
+            db = chromadb.PersistentClient(path=db_path)
+            chroma_collection = db.get_or_create_collection("aura_intelligence")
+            
+            self.vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+            self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
+
+        # Initialize storage service (MinIO/S3)
         self.storage_service = StorageService()
-
-        # Initialize storage context
-        self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
 
         try:
             # Create/Load index

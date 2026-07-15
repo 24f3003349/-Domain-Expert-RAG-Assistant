@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     # Celery
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
+    CELERY_QUEUE_NAME: str = "celery"
 
     def get_celery_broker_url(self) -> str:
         """Construct Celery broker URL from Redis URL."""

@@ -61,7 +61,17 @@ export const useAuthStore = create<AuthState>()(
           get().setAuth(userResponse.data, access_token);
           set({ isLoading: false });
         } catch (error: any) {
-          const message = error.response?.data?.detail || 'Authentication failed';
+          let message = 'Authentication failed';
+          if (error.response?.data?.detail) {
+            const detail = error.response.data.detail;
+            if (Array.isArray(detail)) {
+              message = detail.map((err: any) => err.msg).join(', ');
+            } else if (typeof detail === 'string') {
+              message = detail;
+            }
+          } else if (error.message) {
+            message = error.message;
+          }
           set({ error: message, isLoading: false });
           throw error;
         }
@@ -73,7 +83,17 @@ export const useAuthStore = create<AuthState>()(
           await api.post('/auth/register', { email, password });
           await get().login(email, password);
         } catch (error: any) {
-          const message = error.response?.data?.detail || 'Registration failed';
+          let message = 'Registration failed';
+          if (error.response?.data?.detail) {
+            const detail = error.response.data.detail;
+            if (Array.isArray(detail)) {
+              message = detail.map((err: any) => err.msg).join(', ');
+            } else if (typeof detail === 'string') {
+              message = detail;
+            }
+          } else if (error.message) {
+            message = error.message;
+          }
           set({ error: message, isLoading: false });
           throw error;
         }
