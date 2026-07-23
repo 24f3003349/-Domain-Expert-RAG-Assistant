@@ -20,25 +20,25 @@ export const ChatFeed = () => {
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-8 animate-in fade-in duration-700">
-        <div className="space-y-4 max-w-md">
-          <h2 className="text-4xl font-bold tracking-tighter text-white gradient-text">Neural Workspace</h2>
-          <p className="text-zinc-500 text-sm leading-relaxed">
-            The void is open. Aura is ready to ingest and analyze your domain knowledge with high-precision RAG protocols.
+        <div className="space-y-3 max-w-md">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Engineering Assistant</h2>
+          <p className="text-slate-500 text-sm leading-relaxed">
+            Search or ask anything across your connected documents, research papers, and domain data.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
           {[
-            "Analyze current project architecture...",
-            "Identify security bottlenecks in v1.0",
-            "Synthesize RAG optimization strategy",
-            "Explore neural sync possibilities"
+            "Deployment steps for current project",
+            "Identify potential risk bottlenecks",
+            "Synthesize RAG architecture optimization",
+            "Extract key performance metrics"
           ].map((prompt, idx) => (
             <button 
               key={idx}
-              className="p-4 rounded-2xl bg-[#201f22] border border-zinc-800/50 text-zinc-400 text-xs font-medium hover:border-indigo-500/50 hover:text-indigo-300 transition-all text-left group"
+              className="p-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-medium hover:border-slate-400 hover:text-slate-900 transition-all text-left shadow-xs group"
             >
-              <span className="opacity-0 group-hover:opacity-100 mr-2 text-indigo-500 transition-opacity">→</span>
+              <span className="opacity-0 group-hover:opacity-100 mr-1.5 text-blue-600 transition-opacity">→</span>
               {prompt}
             </button>
           ))}
@@ -49,10 +49,8 @@ export const ChatFeed = () => {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      <div className="pulse-ribbon sticky top-0 z-10" />
-      
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-10 space-y-2">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-8 py-8 space-y-2">
+        <div className="max-w-3xl mx-auto">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <MessageBubble 
@@ -64,9 +62,10 @@ export const ChatFeed = () => {
               />
             ))}
           </AnimatePresence>
-          <div ref={bottomRef} className="h-8" />
+          <div ref={bottomRef} className="h-6" />
         </div>
       </div>
     </div>
   );
 };
+

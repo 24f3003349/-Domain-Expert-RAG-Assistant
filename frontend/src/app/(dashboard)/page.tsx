@@ -21,12 +21,15 @@ export default function WorkspacePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      {/* Workspace Header - Glassmorphic overlay */}
-      <header className="h-16 flex items-center px-8 border-b border-zinc-800/50 bg-[#131315]/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-glow shadow-emerald-500/50" />
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">Sync Pipeline Active</h2>
+    <div className="flex-1 flex flex-col h-full bg-[#f8fafc]">
+      {/* Workspace Header - Orbit Light Bar */}
+      <header className="h-14 flex items-center justify-between px-6 border-b border-slate-200 bg-white/90 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-bold text-slate-900">Engineering Assistant</h1>
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-medium text-slate-700">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>4 sources active</span>
+          </div>
         </div>
       </header>
 
@@ -38,3 +41,4 @@ export default function WorkspacePage() {
     </div>
   );
 }
+
