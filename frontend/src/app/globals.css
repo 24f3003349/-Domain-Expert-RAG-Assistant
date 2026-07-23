@@ -3,57 +3,84 @@
 @tailwind utilities;
 
 :root {
-  --background: 10 10 12; /* Deeper Obsidian Black */
-  --foreground: 229 225 228;
-  --primary: 210 187 255; /* #d2bbff Obsidian Purple */
-  --primary-glow: rgba(210, 187, 255, 0.4);
+  --background: 248 250 252; /* Slate 50 Light Canvas */
+  --foreground: 15 23 42; /* Slate 900 */
+  --primary: 15 23 42; /* Dark Slate Primary CTA */
+  --brand-blue: 37 99 235; /* Royal Blue */
+  --status-green: 16 185 129; /* Emerald 500 */
   --radius: 0.75rem;
   
-  /* Obsidian Design System Tokens */
-  --color-surface: #0e0e10;
-  --color-surface-container: #161619;
-  --color-border-ghost: rgba(210, 187, 255, 0.08);
+  /* Orbit Light System Tokens */
+  --color-surface: #ffffff;
+  --color-surface-container: #f1f5f9;
+  --color-border: #e2e8f0;
 }
 
 @layer base {
+  * {
+    @apply border-slate-200;
+  }
+
   body {
-    background-color: #0a0a0c;
-    color: #e5e1e4;
+    background-color: #f8fafc;
+    color: #0f172a;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
   }
 }
 
 @layer utilities {
   .ghost-border {
-    @apply border border-[var(--color-border-ghost)] backdrop-blur-md;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-    border-color: rgba(210, 187, 255, 0.15); /* Explicit booster */
+    @apply border border-slate-200/80 backdrop-blur-md;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   }
 
   .glass {
-    @apply bg-zinc-900/60 backdrop-blur-2xl border border-white/10;
+    @apply bg-white/85 backdrop-blur-xl border border-slate-200/90;
   }
 
   .ambient-shadow {
-    box-shadow: 0 0 60px -10px color-mix(in srgb, var(--primary-glow) 15%, transparent);
+    box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.04);
+  }
+
+  .subtle-card-hover {
+    @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs hover:border-slate-300;
   }
 
   .pulse-ribbon {
-    @apply h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent opacity-80;
-    filter: drop-shadow(0 0 8px rgba(210, 187, 255, 0.6));
+    @apply h-[2px] w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-80;
   }
 
   .tracking-display {
-    @apply tracking-[-0.04em] font-medium;
+    @apply tracking-[-0.02em] font-bold;
   }
 
   .tracking-label {
-    @apply tracking-[0.2em] uppercase font-bold text-[10px];
+    @apply tracking-[0.1em] uppercase font-semibold text-[11px];
   }
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #d2bbff, #6366F1);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Custom Scrollbar - Sleek & Unobtrusive */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+.gradient-text {
+  color: #0f172a;
+}
+
+
