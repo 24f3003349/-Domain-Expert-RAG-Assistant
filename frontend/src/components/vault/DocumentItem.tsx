@@ -11,10 +11,10 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const statusConfig: Record<DocumentStatus, { label: string, color: string, icon: any }> = {
-  PENDING: { label: 'In Queue', color: 'text-zinc-500 bg-zinc-500/10', icon: Loader2 },
-  PROCESSING: { label: 'Analyzing', color: 'text-indigo-400 bg-indigo-500/10', icon: Cpu },
-  COMPLETED: { label: 'Indexed', color: 'text-emerald-400 bg-emerald-500/10', icon: CheckCircle2 },
-  FAILED: { label: 'Failed', color: 'text-red-400 bg-red-500/10', icon: AlertCircle },
+  PENDING: { label: 'Queued', color: 'text-slate-600 bg-slate-100 border-slate-200', icon: Loader2 },
+  PROCESSING: { label: 'Indexing', color: 'text-blue-700 bg-blue-50 border-blue-200', icon: Cpu },
+  COMPLETED: { label: 'Connected', color: 'text-emerald-700 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+  FAILED: { label: 'Failed', color: 'text-red-700 bg-red-50 border-red-200', icon: AlertCircle },
 };
 
 export const DocumentItem = ({ doc }: { doc: Document }) => {
@@ -25,18 +25,18 @@ export const DocumentItem = ({ doc }: { doc: Document }) => {
   const fileSize = (doc.file_size / (1024 * 1024)).toFixed(2);
 
   return (
-    <div className="group relative bg-[#1c1b1d] border border-zinc-800/50 rounded-2xl p-4 flex items-center gap-4 hover:border-zinc-700/50 transition-all duration-300 shadow-lg shadow-black/20">
-      <div className="w-12 h-12 rounded-xl bg-zinc-900 flex items-center justify-center text-zinc-500 group-hover:text-indigo-400 transition-colors">
-        <FileText size={24} />
+    <div className="group relative bg-white border border-slate-200 rounded-xl p-3.5 flex items-center gap-3.5 hover:border-slate-300 transition-all duration-200 shadow-xs">
+      <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+        <FileText size={20} />
       </div>
 
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-zinc-200 truncate">{doc.filename}</h4>
+        <h4 className="text-xs font-semibold text-slate-900 truncate">{doc.filename}</h4>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-tighter">{fileSize} MB</span>
-          <span className="text-zinc-700">•</span>
+          <span className="text-[11px] text-slate-500 font-mono">{fileSize} MB</span>
+          <span className="text-slate-300">•</span>
           <div className={cn(
-            "flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest",
+            "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border",
             config.color
           )}>
             <Icon size={10} className={cn(doc.status === 'PROCESSING' && "animate-spin")} />
@@ -47,10 +47,12 @@ export const DocumentItem = ({ doc }: { doc: Document }) => {
 
       <button
         onClick={() => deleteDocument(doc.id)}
-        className="opacity-0 group-hover:opacity-100 p-2 text-zinc-600 hover:text-red-400 transition-all rounded-lg hover:bg-red-500/10"
+        className="opacity-0 group-hover:opacity-100 p-1.5 text-slate-400 hover:text-red-600 transition-all rounded-md hover:bg-red-50"
+        title="Remove source"
       >
-        <Trash2 size={18} />
+        <Trash2 size={16} />
       </button>
     </div>
   );
 };
+

@@ -31,66 +31,66 @@ export const VaultModal = ({ isOpen, onClose }: VaultModalProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
           />
 
           {/* Modal Content */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-[#131315] border border-zinc-800 rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            exit={{ opacity: 0, scale: 0.96, y: 15 }}
+            className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]"
           >
             {/* Header */}
-            <div className="p-8 border-b border-zinc-800/50 flex items-center justify-between bg-gradient-to-b from-zinc-900/50 to-transparent">
-              <div className="space-y-1">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <Database size={20} className="text-indigo-400" />
-                  <h2 className="text-2xl font-bold tracking-tight text-white gradient-text">Intelligence Vault</h2>
+                  <Database size={18} className="text-slate-900" />
+                  <h2 className="text-lg font-bold text-slate-900">Data Sources</h2>
                 </div>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Domain Expertise Repository</p>
+                <p className="text-xs text-slate-500">Manage connected domain documents and files</p>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl bg-zinc-800/50 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-all"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-all"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-10">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar space-y-8">
               {/* Upload Section */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <Cpu size={16} />
-                  <span className="text-xs font-bold uppercase tracking-tighter">New Ingestion</span>
+              <section className="space-y-3">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <Cpu size={15} />
+                  <span className="text-xs font-semibold uppercase tracking-wider">Add New Source</span>
                 </div>
                 <DropZone />
               </section>
 
               {/* Document List */}
-              <section className="space-y-4">
+              <section className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <Database size={16} />
-                    <span className="text-xs font-bold uppercase tracking-tighter">Current Fragments</span>
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Database size={15} />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Connected Sources</span>
                   </div>
-                  <span className="text-[10px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full font-bold">
-                    {documents.length} Units
+                  <span className="text-xs bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+                    {documents.length} connected
                   </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {isLoading && documents.length === 0 ? (
-                    <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                      <div className="w-8 h-8 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Accessing Data Shards...</p>
+                    <div className="py-16 flex flex-col items-center justify-center space-y-3">
+                      <div className="w-7 h-7 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+                      <p className="text-xs text-slate-500">Loading data sources...</p>
                     </div>
                   ) : documents.length === 0 ? (
-                    <div className="py-20 border border-dashed border-zinc-800 rounded-2xl flex flex-col items-center justify-center opacity-40">
-                      <Info size={40} className="text-zinc-700 mb-2" />
-                      <p className="text-sm italic text-zinc-600">No active fragments indexed.</p>
+                    <div className="py-16 border border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
+                      <Info size={32} className="mb-2 text-slate-300" />
+                      <p className="text-xs italic text-slate-500">No data sources connected yet.</p>
                     </div>
                   ) : (
                     documents.map((doc) => (
@@ -102,9 +102,9 @@ export const VaultModal = ({ isOpen, onClose }: VaultModalProps) => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-zinc-900/30 border-t border-zinc-800/50 text-center">
-              <p className="text-[9px] text-zinc-600 uppercase tracking-widest">
-                Deep Mind RAG Protocol • All fragments are vector-encrypted
+            <div className="p-4 bg-slate-50 border-t border-slate-200 text-center">
+              <p className="text-xs text-slate-500">
+                All connected sources are securely indexed for domain retrieval
               </p>
             </div>
           </motion.div>
@@ -113,3 +113,4 @@ export const VaultModal = ({ isOpen, onClose }: VaultModalProps) => {
     </AnimatePresence>
   );
 };
+
