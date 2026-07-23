@@ -22,17 +22,17 @@ export const SourceCard = ({ source }: SourceCardProps) => {
   const relevanceWidth = Math.min(Math.max(source.score * 100, 10), 100);
 
   return (
-    <div className="group flex flex-col gap-2 p-3 rounded-2xl bg-zinc-900/30 border border-zinc-800/50 hover:border-indigo-500/30 hover:bg-zinc-800/40 transition-all duration-300">
+    <div className="group flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-all duration-200 shadow-xs">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="p-1.5 rounded-lg bg-zinc-800 text-zinc-500 group-hover:text-amber-500 transition-colors">
+          <div className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500">
             <FileText size={14} />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold text-zinc-300 truncate lowercase tracking-tighter">
+            <p className="text-xs font-semibold text-slate-900 truncate">
               {source.filename}
             </p>
-            <p className="text-[9px] text-zinc-600 font-mono">
+            <p className="text-[10px] text-slate-500 font-mono">
               Fragment p.{source.page_number}
             </p>
           </div>
@@ -40,7 +40,7 @@ export const SourceCard = ({ source }: SourceCardProps) => {
         
         <button 
           onClick={openModal}
-          className="p-1.5 rounded-lg text-zinc-600 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-all"
           title="Inspect Source"
         >
           <ExternalLink size={12} />
@@ -49,15 +49,15 @@ export const SourceCard = ({ source }: SourceCardProps) => {
 
       {/* Relevance Meter */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between text-[8px] uppercase tracking-widest font-bold text-zinc-600">
+        <div className="flex items-center justify-between text-[9px] font-semibold text-slate-500">
           <span className="flex items-center gap-1">
-            <Zap size={8} /> Relevance
+            <Zap size={8} className="text-blue-600" /> Relevance
           </span>
           <span>{Math.round(relevanceWidth)}%</span>
         </div>
-        <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+        <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-indigo-500 transition-all duration-1000 ease-out"
+            className="h-full bg-blue-600 rounded-full transition-all duration-700 ease-out"
             style={{ width: `${relevanceWidth}%` }}
           />
         </div>
@@ -65,3 +65,4 @@ export const SourceCard = ({ source }: SourceCardProps) => {
     </div>
   );
 };
+

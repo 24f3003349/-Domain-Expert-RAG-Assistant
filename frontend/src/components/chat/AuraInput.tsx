@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Loader2 } from 'lucide-react';
+import { ArrowUp, Paperclip, Loader2, AtSign } from 'lucide-react';
 import { useDocumentStore } from '@/store/useDocumentStore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { motion } from 'framer-motion';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,6 +25,9 @@ export const AuraInput = ({ onSend, isLoading }: AuraInputProps) => {
     if (content.trim() && !isLoading) {
       onSend(content.trim());
       setContent('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     }
   };
 
@@ -34,7 +38,6 @@ export const AuraInput = ({ onSend, isLoading }: AuraInputProps) => {
     }
   };
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'inherit';
@@ -44,44 +47,49 @@ export const AuraInput = ({ onSend, isLoading }: AuraInputProps) => {
   }, [content]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 pb-8 pt-2">
+    <div className="w-full max-w-3xl mx-auto px-4 pb-6 pt-2 select-none">
       <div className={cn(
-        "relative flex items-end gap-2 bg-[#0e0e10] border border-zinc-800/50 rounded-2xl p-2 transition-all duration-300",
-        "focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 shadow-2xl shadow-black/50"
+        "relative flex items-end gap-2 bg-white border border-slate-200 rounded-2xl p-2.5 transition-all duration-200 shadow-2xs",
+        "focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-400/20 focus-within:shadow-md"
       )}>
-        <button 
-          onClick={openModal}
-          title="Open Intelligence Vault"
-          className="p-2.5 text-zinc-500 hover:text-indigo-400 transition-colors"
-        >
-          <Paperclip size={20} />
-        </button>
-
         <textarea
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Query the neural void..."
-          className="flex-1 bg-transparent border-none text-zinc-200 placeholder:text-zinc-600 resize-none py-2.5 outline-none text-sm max-h-[200px] custom-scrollbar"
+          placeholder="Orbit searches across your active sources..."
+          className="flex-1 bg-transparent border-none text-slate-900 placeholder:text-slate-400 resize-none px-2 py-2 outline-none text-xs sm:text-sm max-h-[200px] custom-scrollbar"
           rows={1}
         />
 
-        <button
-          onClick={handleSend}
-          disabled={!content.trim() || isLoading}
-          className={cn(
-            "p-2.5 rounded-xl transition-all duration-300",
-            content.trim() && !isLoading 
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95" 
-              : "bg-zinc-800 text-zinc-500 cursor-not-allowed"
-          )}
-        >
-          {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-        </button>
+        <div className="flex items-center gap-1">
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={openModal}
+            title="Attach Source Document"
+            className="p-2 text-slate-400 hover:text-slate-700 transition-colors rounded-lg hover:bg-slate-50"
+          >
+            <Paperclip size={18} />
+          </motion.button>
+
+          <motion.button
+            whileHover={content.trim() && !isLoading ? { scale: 1.05 } : {}}
+            whileTap={content.trim() && !isLoading ? { scale: 0.95 } : {}}
+            onClick={handleSend}
+            disabled={!content.trim() || isLoading}
+            className={cn(
+              "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0",
+              content.trim() && !isLoading 
+                ? "bg-slate-900 text-white hover:bg-slate-800 shadow-2xs" 
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            )}
+          >
+            {isLoading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUp size={18} />}
+          </motion.button>
+        </div>
       </div>
-      <p className="text-[10px] text-zinc-600 text-center mt-3 tracking-tight uppercase">
-        Encrypted Sync Active • Domain Expert Protocol v1.0
+      <p className="text-[11px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
+        <AtSign size={12} className="text-slate-400" /> Use <span className="font-semibold text-slate-600">@mention</span> a source to narrow the search
       </p>
     </div>
   );
