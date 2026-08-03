@@ -9,9 +9,22 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
+# Format database URLs to ensure correct dialects
+db_url = settings.get_database_url()
+
+if db_url.startswith("postgresql://"):
+    async_db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    sync_db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
+elif db_url.startswith("postgresql+asyncpg://"):
+    async_db_url = db_url
+    sync_db_url = db_url.replace("postgresql+asyncpg://", "postgresql+pg8000://", 1)
+else:
+    async_db_url = db_url
+    sync_db_url = db_url
+
 # Create async engine
 async_engine = create_async_engine(
-    settings.get_database_url(),
+    async_db_url,
     echo=settings.DEBUG,
     future=True,
 )
@@ -27,7 +40,7 @@ AsyncSessionLocal = sessionmaker(
 
 # Create sync engine for migrations and sync sessions
 sync_engine = create_engine(
-    settings.get_database_url().replace("postgresql+asyncpg://", "postgresql+pg8000://"),
+    sync_db_url,
     echo=settings.DEBUG,
     future=True,
 )

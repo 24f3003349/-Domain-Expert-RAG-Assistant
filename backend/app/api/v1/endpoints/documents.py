@@ -148,6 +148,15 @@ async def delete_document(
             # Log error but continue with database deletion
             print(f"Failed to delete file from storage: {e}")
 
+    # Delete from vector store
+    from app.services.rag_service import RAGService
+    try:
+        rag_service = RAGService()
+        await rag_service.delete_document_from_index(document_id, current_user.id)
+    except Exception as e:
+        # Log error but continue with database deletion to avoid orphan records
+        print(f"Failed to delete document from vector index: {e}")
+
     # Delete from database
     await document_crud.delete(db, id=document_id)
 

@@ -46,6 +46,8 @@ class PDFParser:
         if metadata:
             for doc in documents:
                 doc.metadata.update(metadata)
+                if "document_id" in metadata:
+                    doc.id_ = str(metadata["document_id"])
 
         # 3. Parse into chunks/nodes
         nodes = self.node_parser.get_nodes_from_documents(documents)

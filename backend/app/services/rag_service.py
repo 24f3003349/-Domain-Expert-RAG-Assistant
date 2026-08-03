@@ -228,6 +228,8 @@ RESPONSE:"""
 
     async def delete_document_from_index(self, document_id: str, user_id: str) -> None:
         """Delete all nodes associated with a document_id and user_id from local index."""
-        # ChromaDB deletion logic (simplified: re-initialize retriever if needed)
-        # Note: For production, we'd use chroma_collection.delete(where=...)
-        pass
+        try:
+            self.vector_store.delete(ref_doc_id=str(document_id))
+        except Exception as e:
+            print(f"Error deleting document {document_id} from vector store: {str(e)}")
+            raise e
