@@ -4,6 +4,7 @@
 .planning/
 .claude/
 .gemini/
+.codegraph/
 
 # Python
 __pycache__/

@@ -4,6 +4,7 @@ import io
 import os
 import uuid
 from typing import Optional
+from urllib.parse import urlparse
 
 from minio import Minio
 from minio.error import S3Error
@@ -18,14 +19,9 @@ class StorageService:
 
     def __init__(self):
         """Initialize MinIO client."""
-        # Extract host:port from endpoint URL
         endpoint_url = settings.get_s3_endpoint_url()
-        if endpoint_url.startswith("http://"):
-            endpoint = endpoint_url[7:]  # Remove http://
-        elif endpoint_url.startswith("https://"):
-            endpoint = endpoint_url[8:]  # Remove https://
-        else:
-            endpoint = endpoint_url
+        parsed = urlparse(endpoint_url)
+        endpoint = parsed.netloc if parsed.netloc else endpoint_url
 
         self.client = Minio(
             endpoint=endpoint,
