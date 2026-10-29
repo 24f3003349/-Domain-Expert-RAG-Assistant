@@ -95,6 +95,11 @@ class Settings(BaseSettings):
     GEMINI_EMBEDDING_MODEL: str = "text-embedding-004"
     GEMINI_CHAT_MODEL: str = "gemini-1.5-flash"
 
+    # Ollama
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "granite4.2:8b"
+    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+
     # Cohere (for reranking)
     COHERE_API_KEY: str = "dev-cohere-key-change-in-production"
 
@@ -119,6 +124,7 @@ class Settings(BaseSettings):
     # Celery
     CELERY_BROKER_URL: Optional[str] = None
     CELERY_RESULT_BACKEND: Optional[str] = None
+    CELERY_QUEUE_NAME: str = "celery"
 
     def get_celery_broker_url(self) -> str:
         """Construct Celery broker URL from Redis URL."""

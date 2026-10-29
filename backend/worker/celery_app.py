@@ -1,6 +1,13 @@
 from celery import Celery
+from app.core.config import get_settings
 
-celery_app = Celery('rag_worker', broker='redis://localhost:6379/0')
+settings = get_settings()
+
+celery_app = Celery(
+    'rag_worker',
+    broker=settings.get_celery_broker_url(),
+    backend=settings.get_celery_result_backend(),
+)
 
 # Task Discovery
 celery_app.autodiscover_tasks(['worker'])
