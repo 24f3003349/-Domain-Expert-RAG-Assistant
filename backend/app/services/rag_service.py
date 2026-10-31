@@ -24,12 +24,15 @@ class RAGService:
     def __init__(self):
         """Initialize the RAG service."""
         # --- LOCAL LLM (OLLAMA) ---
+        ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.llm = Ollama(
-            model="llama3.2:1b", 
+            base_url=ollama_base_url,
+            model="granite4.2:8b", 
             request_timeout=120.0
         )
         # --- LOCAL EMBEDDINGS ---
         self.embed_model = OllamaEmbedding(
+            base_url=ollama_base_url,
             model_name="nomic-embed-text"
         )
 

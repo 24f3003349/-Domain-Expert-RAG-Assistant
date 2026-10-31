@@ -1,4 +1,4 @@
-"""PDF parsing service using LlamaIndex and Unstructured."""
+"""PDF parsing service using LlamaIndex PDFReader."""
 
 import os
 from typing import List
@@ -6,7 +6,7 @@ from typing import List
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import TextNode
-from llama_index.readers.file import UnstructuredReader
+from llama_index.readers.file import PDFReader
 
 from app.core.config import get_settings
 
@@ -18,7 +18,7 @@ class PDFParser:
 
     def __init__(self):
         """Initialize the parser with configured settings."""
-        self.reader = UnstructuredReader()
+        self.reader = PDFReader()
         
         self.node_parser = SentenceSplitter(
             chunk_size=1024,
