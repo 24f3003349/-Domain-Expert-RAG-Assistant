@@ -25,16 +25,9 @@ dependencies = [
     # Vector DB & Embeddings
     "pinecone-client>=5.0.0",
     "google-generativeai>=0.8.0",
-    # Document Processing
-    "unstructured[pdf]>=0.16.0",
     "llama-index>=0.11.0",
     "llama-index-vector-stores-pinecone>=0.2.0",
     "llama-index-embeddings-gemini>=0.1.0",
-    # Reranking
-    "cohere>=5.13.0",
-    "sentence-transformers>=3.3.0",
-    # S3/Storage
-    "boto3>=1.35.0",
     "minio>=7.2.0",
     # Resilience
     "tenacity>=9.0.0",
@@ -43,6 +36,8 @@ dependencies = [
     "llama-index-llms-ollama>=0.10.1",
     "llama-index-embeddings-ollama>=0.9.0",
     "llama-index-vector-stores-chroma>=0.5.5",
+    "psycopg2-binary>=2.9.13",
+    "email-validator>=2.3.0",
 ]
 
 [dependency-groups]
