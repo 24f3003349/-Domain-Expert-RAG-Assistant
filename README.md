@@ -67,7 +67,21 @@ graph TD
 
 ---
 
-## 🚦 Getting Started
+## 🚦 Quick Start (Single Command)
+
+Boot the entire enterprise stack (PostgreSQL, Redis, MinIO, Migrations, FastAPI Backend, Next.js Frontend) in one command:
+
+```bash
+docker compose up --build
+```
+
+- **Frontend UI**: [http://localhost:3000](http://localhost:3000)
+- **API Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **MinIO Console**: [http://localhost:9001](http://localhost:9001) (`minioadmin` / `minioadmin`)
+
+---
+
+## 🛠️ Manual Development Setup
 
 ### 1. Configure Environment
 Copy `.env` file and set keys (`SECRET_KEY`, `GEMINI_API_KEY`, `PINECONE_API_KEY`):
