@@ -28,8 +28,10 @@ dist/
 build/
 *.log
 
-# Infrastructure
-infrastructure/.env
+# Vector DB & Storage
+backend/chroma_db/
+chroma_db/
+minio_data/
 
 # OS
 .DS_Store
