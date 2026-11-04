@@ -56,6 +56,7 @@ services:
 
   # --- Backend API & Migrations ---
   backend:
+    image: domain-expert-rag-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -91,9 +92,7 @@ services:
 
   # --- Celery Ingestion Worker ---
   worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: domain-expert-rag-backend:latest
     restart: unless-stopped
     command: celery -A worker.celery_app.celery_app worker --loglevel=info --concurrency=2
     environment:
@@ -114,6 +113,8 @@ services:
     volumes:
       - chroma_data:/app/chroma_db
     depends_on:
+      backend:
+        condition: service_started
       db:
         condition: service_healthy
       redis:
