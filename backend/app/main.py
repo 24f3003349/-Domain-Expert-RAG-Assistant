@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 
 import redis.asyncio as redis
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi_limiter import FastAPILimiter
@@ -22,9 +23,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifespan."""
-    # Create tables
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Note: Database migrations are managed via Alembic (alembic upgrade head)
 
     # Initialize rate limiter
     try:
@@ -60,6 +59,13 @@ app.add_middleware(
 )
 
 # Include API router
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    errors = exc.errors()
+    msg = "; ".join(f"{err.get('loc', ['field'])[-1]}: {err.get('msg', 'invalid')}" for err in errors)
+    return JSONResponse(status_code=422, content={"detail": msg, "errors": errors})
+
+
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 

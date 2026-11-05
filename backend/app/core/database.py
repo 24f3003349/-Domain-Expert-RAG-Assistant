@@ -12,7 +12,11 @@ settings = get_settings()
 # Create async engine
 async_engine = create_async_engine(
     settings.get_database_url(),
-    echo=settings.DEBUG,
+    echo=settings.DB_ECHO,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=3600,
     future=True,
 )
 
@@ -28,7 +32,11 @@ AsyncSessionLocal = sessionmaker(
 # Create sync engine for migrations
 sync_engine = create_engine(
     settings.get_database_url().replace("postgresql+asyncpg://", "postgresql://"),
-    echo=settings.DEBUG,
+    echo=settings.DB_ECHO,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_recycle=3600,
     future=True,
 )
 

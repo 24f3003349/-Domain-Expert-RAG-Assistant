@@ -1,5 +1,6 @@
 """Storage service for MinIO S3."""
 
+import asyncio
 import io
 import os
 import uuid
@@ -30,12 +31,17 @@ class StorageService:
             secure=settings.MINIO_SECURE,
         )
         self.bucket_name = settings.MINIO_BUCKET_NAME
+        self._bucket_checked = False
 
     async def _ensure_bucket_exists(self) -> None:
         """Ensure the bucket exists."""
+        if self._bucket_checked:
+            return
         try:
-            if not self.client.bucket_exists(self.bucket_name):
-                self.client.make_bucket(self.bucket_name)
+            exists = await asyncio.to_thread(self.client.bucket_exists, self.bucket_name)
+            if not exists:
+                await asyncio.to_thread(self.client.make_bucket, self.bucket_name)
+            self._bucket_checked = True
         except S3Error as e:
             raise Exception(f"Failed to create bucket: {e}")
 
@@ -45,32 +51,27 @@ class StorageService:
         filename: str,
         content_type: Optional[str] = None,
     ) -> str:
-        """Upload a file to MinIO storage."""
+        """Upload a file to MinIO storage without blocking event loop."""
         await self._ensure_bucket_exists()
 
-        # Generate unique object name
         file_extension = os.path.splitext(filename)[1]
         object_name = f"documents/{uuid.uuid4()}{file_extension}"
 
         try:
-            # Upload file
-            result = self.client.put_object(
+            await asyncio.to_thread(
+                self.client.put_object,
                 bucket_name=self.bucket_name,
                 object_name=object_name,
                 data=io.BytesIO(file_content),
                 length=len(file_content),
                 content_type=content_type or "application/octet-stream",
             )
-
-            # Return URL
             return f"{settings.get_s3_endpoint_url()}/{self.bucket_name}/{object_name}"
         except S3Error as e:
             raise Exception(f"Failed to upload file: {e}")
 
     async def download_file(self, storage_url: str) -> bytes:
-        """Download a file from MinIO storage."""
-        # Extract object name from URL
-        # URL format: http://localhost:9000/bucket-name/documents/uuid.pdf
+        """Download a file from MinIO storage without blocking event loop."""
         parts = storage_url.split("/")
         if len(parts) < 4:
             raise ValueError("Invalid storage URL format")
@@ -78,19 +79,21 @@ class StorageService:
         bucket_name = parts[3]
         object_name = "/".join(parts[4:])
 
-        try:
+        def _get():
             response = self.client.get_object(bucket_name, object_name)
-            return response.read()
-        except S3Error as e:
-            raise Exception(f"Failed to download file: {e}")
-        finally:
-            if 'response' in locals():
+            try:
+                return response.read()
+            finally:
                 response.close()
                 response.release_conn()
 
+        try:
+            return await asyncio.to_thread(_get)
+        except S3Error as e:
+            raise Exception(f"Failed to download file: {e}")
+
     async def delete_file(self, storage_url: str) -> None:
-        """Delete a file from MinIO storage."""
-        # Extract object name from URL
+        """Delete a file from MinIO storage without blocking event loop."""
         parts = storage_url.split("/")
         if len(parts) < 4:
             raise ValueError("Invalid storage URL format")
@@ -99,13 +102,12 @@ class StorageService:
         object_name = "/".join(parts[4:])
 
         try:
-            self.client.remove_object(bucket_name, object_name)
+            await asyncio.to_thread(self.client.remove_object, bucket_name, object_name)
         except S3Error as e:
             raise Exception(f"Failed to delete file: {e}")
 
     async def get_file_metadata(self, storage_url: str) -> dict:
-        """Get file metadata from MinIO storage."""
-        # Extract object name from URL
+        """Get file metadata from MinIO storage without blocking event loop."""
         parts = storage_url.split("/")
         if len(parts) < 4:
             raise ValueError("Invalid storage URL format")
@@ -114,7 +116,7 @@ class StorageService:
         object_name = "/".join(parts[4:])
 
         try:
-            stat = self.client.stat_object(bucket_name, object_name)
+            stat = await asyncio.to_thread(self.client.stat_object, bucket_name, object_name)
             return {
                 "content_type": stat.content_type,
                 "size": stat.size,
