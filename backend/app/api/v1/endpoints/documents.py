@@ -42,14 +42,17 @@ async def upload_document(
     content = await file.read()
     file_hash = hashlib.sha256(content).hexdigest()
 
-    # Check if document already exists
+    # Check if document already exists for this user
     from app.crud.document import document as document_crud
-    existing_doc = await document_crud.get_by_hash(db, hash=file_hash)
+    existing_doc = await document_crud.get_by_hash_and_user(db, hash=file_hash, user_id=str(current_user.id))
     if existing_doc:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Document already exists"
-        )
+        if existing_doc.status != DocumentStatus.FAILED:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Document already exists"
+            )
+        # Clean up failed previous attempt to allow re-upload
+        await document_crud.delete(db, id=existing_doc.id)
 
     # Upload to storage
     try:
@@ -147,6 +150,14 @@ async def delete_document(
         except Exception as e:
             # Log error but continue with database deletion
             print(f"Failed to delete file from storage: {e}")
+
+    # Delete from vector index
+    try:
+        from app.services.rag_service import get_rag_service
+        rag = get_rag_service()
+        await rag.delete_document_from_index(document_id=str(document.id), user_id=str(current_user.id))
+    except Exception as e:
+        print(f"Failed to delete vectors from Chroma: {e}")
 
     # Delete from database
     await document_crud.delete(db, id=document_id)

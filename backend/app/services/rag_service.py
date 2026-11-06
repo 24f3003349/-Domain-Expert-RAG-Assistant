@@ -1,6 +1,6 @@
 """RAG service for document Q&A using Local Ollama and ChromaDB."""
 
-from typing import AsyncGenerator, List, Union, Dict, Any
+from typing import AsyncGenerator, List, Union, Dict, Any, Optional
 
 import os
 import json
@@ -27,8 +27,9 @@ class RAGService:
         ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.llm = Ollama(
             base_url=ollama_base_url,
-            model="granite4.2:8b", 
-            request_timeout=120.0
+            model="granite4.2:8b",
+            context_window=4096,
+            request_timeout=300.0,
         )
         # --- LOCAL EMBEDDINGS ---
         self.embed_model = OllamaEmbedding(
@@ -72,11 +73,11 @@ class RAGService:
             return
 
         try:
-            # 1. Retrieve relevant documents
+            # 1. Retrieve relevant documents (compact top_k to preserve context budget and low latency)
             relevant_docs = await self._retrieve_relevant_documents(
                 message=message,
                 user_id=user_id,
-                top_k=10,
+                top_k=4,
             )
 
             if not relevant_docs:
@@ -109,13 +110,16 @@ class RAGService:
                 yield chunk
 
         except Exception as e:
-            yield f"I'm sorry, an error occurred while processing your question: {str(e)}"
+            import traceback
+            traceback.print_exc()
+            error_msg = str(e) or type(e).__name__
+            yield f"I'm sorry, an error occurred while processing your question: {error_msg}"
 
     async def _retrieve_relevant_documents(
         self,
         message: str,
         user_id: str,
-        top_k: int = 6, # Reduced k for better prompt density
+        top_k: int = 4, # Reduced k for optimal prompt density and latency
     ) -> List[NodeWithScore]:
         """Retrieve relevant documents using local vector search."""
         # Note: Chroma filters for user_id can be added to the retriever
@@ -183,8 +187,19 @@ RESPONSE:"""
         """Generate streaming response from Local Ollama."""
         response = await self.llm.astream_complete(prompt)
 
+        in_thinking = False
         async for chunk in response:
+            think = chunk.additional_kwargs.get("thinking_delta")
+            if think:
+                if not in_thinking:
+                    yield "> *Thinking Process:*\n> "
+                    in_thinking = True
+                yield think.replace("\n", "\n> ")
+
             if chunk.delta:
+                if in_thinking:
+                    yield "\n\n---\n\n"
+                    in_thinking = False
                 yield chunk.delta
 
     async def add_document_to_index(
@@ -202,8 +217,26 @@ RESPONSE:"""
             embed_model=self.embed_model,
         )
 
-    async def delete_document_from_index(self, document_id: str, user_id: str) -> None:
+    async def delete_document_from_index(self, document_id: str, user_id: Optional[str] = None) -> None:
         """Delete all nodes associated with a document_id and user_id from local index."""
-        # ChromaDB deletion logic (simplified: re-initialize retriever if needed)
-        # Note: For production, we'd use chroma_collection.delete(where=...)
-        pass
+        try:
+            where_filter: Dict[str, Any] = {"document_id": str(document_id)}
+            if user_id:
+                where_filter = {"$and": [{"document_id": str(document_id)}, {"user_id": str(user_id)}]}
+
+            if hasattr(self, "vector_store") and hasattr(self.vector_store, "_collection"):
+                self.vector_store._collection.delete(where=where_filter)
+        except Exception as e:
+            print(f"Warning: Failed to delete document {document_id} from Chroma: {e}")
+
+
+_rag_service_instance: Optional[RAGService] = None
+
+
+def get_rag_service() -> RAGService:
+    """Get or initialize singleton RAG service instance."""
+    global _rag_service_instance
+    if _rag_service_instance is None:
+        _rag_service_instance = RAGService()
+    return _rag_service_instance
+

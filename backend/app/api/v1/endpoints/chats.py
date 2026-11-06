@@ -14,7 +14,7 @@ from app.models.message import Message, MessageRole
 from app.models.user import User
 from app.schemas.chat import ChatCreate, ChatResponse, ChatUpdate
 from app.schemas.message import MessageCreate, MessageResponse
-from app.services.rag_service import RAGService
+from app.services.rag_service import get_rag_service
 
 router = APIRouter()
 # Initialized inside endpoints to avoid startup circularity
@@ -109,8 +109,8 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
 ) -> Any:
     """Send a message and get AI response."""
-    from app.services.rag_service import RAGService
-    rag_service = RAGService()
+    from app.services.rag_service import get_rag_service
+    rag_service = get_rag_service()
     from app.crud.chat import chat as chat_crud
     from app.crud.message import message as message_crud
 
@@ -174,7 +174,7 @@ async def stream_chat_response(
     response_content = ""
 
     try:
-        from app.services.rag_service import RAGService
+        from app.services.rag_service import get_rag_service
         rag_service = RAGService()
         async for item in rag_service.stream_response(
             message=user_content,

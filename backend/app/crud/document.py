@@ -1,7 +1,13 @@
-"""CRUD operations for documents."""
-
+import uuid
 from typing import Any, Dict, List, Optional, Union
 
+def _to_uuid(val: Any) -> Any:
+    if isinstance(val, str):
+        try:
+            return uuid.UUID(val)
+        except (ValueError, AttributeError):
+            return val
+    return val
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -30,6 +36,16 @@ class CRUDDocument:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_hash_and_user(
+        self, db: AsyncSession, *, hash: str, user_id: str
+    ) -> Optional[Document]:
+        """Get document by file hash and user ID."""
+        result = await db.execute(
+            select(Document)
+            .filter(Document.file_hash == hash, Document.user_id == _to_uuid(user_id))
+        )
+        return result.scalar_one_or_none()
+
     async def get_user_document(
         self, db: AsyncSession, *, id: str, user_id: str
     ) -> Optional[Document]:
@@ -37,7 +53,7 @@ class CRUDDocument:
         result = await db.execute(
             select(Document)
             .options(selectinload(Document.user))
-            .filter(Document.id == id, Document.user_id == user_id)
+            .filter(Document.id == _to_uuid(id), Document.user_id == _to_uuid(user_id))
         )
         return result.scalar_one_or_none()
 
@@ -53,7 +69,7 @@ class CRUDDocument:
         result = await db.execute(
             select(Document)
             .options(selectinload(Document.user))
-            .filter(Document.user_id == user_id)
+            .filter(Document.user_id == _to_uuid(user_id))
             .order_by(Document.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -109,7 +125,7 @@ class CRUDDocument:
 
         result = await db.execute(
             select(func.count(Document.id))
-            .filter(Document.user_id == user_id)
+            .filter(Document.user_id == _to_uuid(user_id))
         )
         return result.scalar()
 
