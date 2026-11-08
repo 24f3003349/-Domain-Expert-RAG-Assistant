@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import api from '@/lib/api-client';
+import api, { extractErrorMessage } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -34,6 +34,9 @@ export const useAuthStore = create<AuthState>()(
       error: null,
 
       setAuth: (user, token) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', token);
+        }
         set({ user, token, isAuthenticated: true, error: null });
       },
 
@@ -61,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
           get().setAuth(userResponse.data, access_token);
           set({ isLoading: false });
         } catch (error: any) {
-          const message = error.response?.data?.detail || 'Authentication failed';
+          const message = extractErrorMessage(error, 'Authentication failed');
           set({ error: message, isLoading: false });
           throw error;
         }
@@ -73,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
           await api.post('/auth/register', { email, password });
           await get().login(email, password);
         } catch (error: any) {
-          const message = error.response?.data?.detail || 'Registration failed';
+          const message = extractErrorMessage(error, 'Registration failed');
           set({ error: message, isLoading: false });
           throw error;
         }
@@ -92,7 +95,12 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ user: state.user, token: state.token, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.token && typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', state.token);
+        }
+      },
     }
   )
 );

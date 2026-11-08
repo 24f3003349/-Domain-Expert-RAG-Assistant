@@ -19,6 +19,11 @@ export default function RegisterPage() {
     e.preventDefault();
     setLocalError(null);
 
+    if (password.length < 8) {
+      setLocalError('Password must be at least 8 characters');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setLocalError('Passwords do not match');
       return;
@@ -70,7 +75,7 @@ export default function RegisterPage() {
 
           {(error || localError) && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs py-3 px-4 rounded-xl">
-              {error || localError}
+              {String(error || localError)}
             </div>
           )}
 
