@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from '@/lib/api-client';
+import api, { extractErrorMessage } from '@/lib/api-client';
 
 export type DocumentStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 
@@ -77,7 +77,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       get().pollStatus(newDoc.id);
       return newDoc;
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Ingestion failure';
+      const message = extractErrorMessage(error, 'Ingestion failure');
       set({ error: message, isUploading: false });
       throw error;
     }

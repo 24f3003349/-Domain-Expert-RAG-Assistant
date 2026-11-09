@@ -118,7 +118,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     try {
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/chats/${activeChatId}/messages?stream=true`, {
+      const rawApiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1').replace(/\/+$/, '');
+      const baseUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const response = await fetch(`${baseUrl}/chats/${activeChatId}/messages?stream=true`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,39 +145,39 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       set((state) => ({ messages: [...state.messages, assistantMessage] }));
 
+      let buffer = '';
       while (true) {
         const { done, value } = await reader!.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.replace('data: ', '').trim();
-            if (dataStr === '[DONE]') continue;
-            
-            try {
-              const data = JSON.parse(dataStr);
-              if (data.type === 'metadata' && data.sources) {
-                // Store sources for the current message
-                assistantMessage.sources = data.sources;
-              } else if (data.chunk) {
-                assistantMessage.content += data.chunk;
-              } else if (data.error) {
-                throw new Error(data.error);
-              }
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data: ')) continue;
+          const dataStr = trimmed.slice(6).trim();
+          if (dataStr === '[DONE]') continue;
 
-              // Update the message in state
-              set((state) => ({
-                messages: state.messages.map(msg => 
-                  msg.id === 'streaming-assistant' ? { ...assistantMessage } : msg
-                )
-              }));
-
-            } catch (e) {
-              console.error('SSE Parse Error', e);
+          try {
+            const data = JSON.parse(dataStr);
+            if (data.type === 'metadata' && data.sources) {
+              assistantMessage.sources = data.sources;
+            } else if (data.chunk) {
+              assistantMessage.content += data.chunk;
+            } else if (data.error) {
+              throw new Error(data.error);
             }
+
+            set((state) => ({
+              messages: state.messages.map(msg => 
+                msg.id === 'streaming-assistant' ? { ...assistantMessage } : msg
+              )
+            }));
+
+          } catch (e) {
+            console.error('SSE Parse Error', e);
           }
         }
       }

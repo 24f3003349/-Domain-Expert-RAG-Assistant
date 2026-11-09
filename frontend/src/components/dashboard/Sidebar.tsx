@@ -107,27 +107,32 @@ export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
           </motion.button>
         </div>
 
-        {chats.length === 0 && !isLoading && (
-          <p className="text-xs text-slate-400 italic px-3">Deployment steps for Project X</p>
+        {chats.length === 0 && !isLoading ? (
+          <p className="text-xs text-slate-400 italic px-3 py-2">No recent sessions. Click + to begin.</p>
+        ) : (
+          chats.map((chat) => {
+            const isActive = params?.id === chat.id;
+            return (
+              <motion.button
+                key={chat.id}
+                whileHover={{ x: 2 }}
+                onClick={() => {
+                  if (onTabChange) onTabChange('chat');
+                  router.push(`/chat/${chat.id}`);
+                }}
+                className={cn(
+                  "w-full text-left px-3 py-1.5 rounded-lg text-xs truncate block transition-all",
+                  isActive
+                    ? "bg-slate-100 text-slate-900 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                )}
+                title={chat.title}
+              >
+                {chat.title || 'Untitled Session'}
+              </motion.button>
+            );
+          })
         )}
-
-        {[
-          "Deployment steps for Project X",
-          "Login bug Jira tickets",
-          "Engineering updates summary",
-          "Q3 release notes",
-          "Auth service architecture",
-          "Onboarding doc review"
-        ].map((title, idx) => (
-          <motion.button
-            key={idx}
-            whileHover={{ x: 2 }}
-            onClick={() => { if (onTabChange) onTabChange('chat'); }}
-            className="w-full text-left px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 truncate block transition-all"
-          >
-            {title}
-          </motion.button>
-        ))}
       </div>
 
       {/* User Actions Footer */}
@@ -137,7 +142,7 @@ export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
             {user?.email?.substring(0, 1).toUpperCase() || 'A'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-900 truncate">{user?.email ? user.email.split('@')[0] : 'Alex'}</p>
+            <p className="text-xs font-semibold text-slate-900 truncate">{user?.email ? user.email.split('@')[0] : 'User'}</p>
             <p className="text-[10px] text-slate-500">Domain Expert</p>
           </div>
           <motion.button
@@ -153,4 +158,3 @@ export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
     </aside>
   );
 };
-
