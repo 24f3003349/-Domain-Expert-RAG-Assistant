@@ -1,6 +1,7 @@
 """PDF parsing service using LlamaIndex PDFReader."""
 
 import os
+import unicodedata
 from typing import List
 
 from llama_index.core import Document
@@ -39,8 +40,11 @@ class PDFParser:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found at {file_path}")
 
-        # 1. Load the document
+        # 1. Load the document and normalize unicode characters
         documents = self.reader.load_data(file_path)
+        for doc in documents:
+            if hasattr(doc, "text") and doc.text:
+                doc.text = unicodedata.normalize("NFKC", doc.text)
         
         # 2. Add metadata to documents
         if metadata:
