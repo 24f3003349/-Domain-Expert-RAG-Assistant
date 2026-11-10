@@ -1038,6 +1038,7 @@ dependencies = [
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "fastapi-limiter" },
+    { name = "flashrank" },
     { name = "google-generativeai" },
     { name = "llama-index" },
     { name = "llama-index-embeddings-gemini" },
@@ -1054,6 +1055,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "python-multipart" },
+    { name = "rank-bm25" },
     { name = "redis" },
     { name = "sqlalchemy" },
     { name = "tenacity" },
@@ -1083,6 +1085,7 @@ requires-dist = [
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "fastapi-limiter", specifier = ">=0.1.6" },
+    { name = "flashrank", specifier = ">=0.2.9" },
     { name = "google-generativeai", specifier = ">=0.8.0" },
     { name = "llama-index", specifier = ">=0.11.0" },
     { name = "llama-index-embeddings-gemini", specifier = ">=0.1.0" },
@@ -1099,6 +1102,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.0" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.3.0" },
     { name = "python-multipart", specifier = ">=0.0.12" },
+    { name = "rank-bm25", specifier = ">=0.2.2" },
     { name = "redis", specifier = ">=5.2.0" },
     { name = "sqlalchemy", specifier = ">=2.0.36" },
     { name = "tenacity", specifier = ">=9.0.0" },
@@ -1164,6 +1168,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bb/29/745f7d30d47fe0f251d3ad3dc2978a23141917661998763bebb6da007eb1/filetype-1.2.0.tar.gz", hash = "sha256:66b56cd6474bf41d8c54660347d37afcc3f7d1970648de365c102ef77548aadb", size = 998020, upload_time = "2022-11-02T17:34:04.141Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/18/79/1b8fa1bb3568781e84c9200f951c735f3f157429f44be0495da55894d620/filetype-1.2.0-py2.py3-none-any.whl", hash = "sha256:7ce71b6880181241cf7ac8697a2f1eb6a8bd9b429f7ad6d27b8db9ba5f1c2d25", size = 19970, upload_time = "2022-11-02T17:34:01.425Z" },
+]
+
+[[package]]
+name = "flashrank"
+version = "0.2.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "onnxruntime" },
+    { name = "requests" },
+    { name = "tokenizers" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/1f/176cb4a857a70c3538f637e19389ab6aed21548a1ba1d1424fccc8bba108/FlashRank-0.2.10.tar.gz", hash = "sha256:f8f82a25c32fdfc668a09dc4089421d6aab8e7f71308424b541f40bb3f01d9db", size = 18905, upload_time = "2025-01-06T13:33:01.657Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ec/99/72639cc1c9221c5bc77a2df1c2d352fe11965553bdf7d3e0856e7fcc8fd6/FlashRank-0.2.10-py3-none-any.whl", hash = "sha256:5d3272ae657d793c132d1e7917ed9e2adf49e0e1c60735583a67b051c6f0434a", size = 14511, upload_time = "2025-01-06T13:32:59.42Z" },
 ]
 
 [[package]]
@@ -4284,6 +4304,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/25/cd/456c0a0de093636683cfe61c0db7865005f00f1a1d38d3c964c0b6e70c73/ragas-0.3.9.tar.gz", hash = "sha256:7807cfc3f01c0297ef99ab3e6a5f53e7cac0a73267d273273b17871437c55786", size = 43865644, upload_time = "2025-11-11T17:25:19.18Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/60/e7/4b76c1d5826481fe6bd0aaa4527e7a98a17164559c41b5fe0663a236a1dd/ragas-0.3.9-py3-none-any.whl", hash = "sha256:1be77af14c7101f26125cc025ff1026f49e2d564162471ae590c3d832527f9c5", size = 366710, upload_time = "2025-11-11T17:25:16.374Z" },
+]
+
+[[package]]
+name = "rank-bm25"
+version = "0.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/0a/f9579384aa017d8b4c15613f86954b92a95a93d641cc849182467cf0bb3b/rank_bm25-0.2.2.tar.gz", hash = "sha256:096ccef76f8188563419aaf384a02f0ea459503fdf77901378d4fd9d87e5e51d", size = 8347, upload_time = "2022-02-16T12:10:52.196Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/21/f691fb2613100a62b3fa91e9988c991e9ca5b89ea31c0d3152a3210344f9/rank_bm25-0.2.2-py3-none-any.whl", hash = "sha256:7bd4a95571adadfc271746fa146a4bcfd89c0cf731e49c3d1ad863290adbe8ae", size = 8584, upload_time = "2022-02-16T12:10:50.626Z" },
 ]
 
 [[package]]
