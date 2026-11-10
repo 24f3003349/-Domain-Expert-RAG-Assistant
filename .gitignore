@@ -1,6 +1,7 @@
 # Project Specific
 *.md
 !README.md
+!EVAL.md
 .planning/
 .claude/
 .gemini/

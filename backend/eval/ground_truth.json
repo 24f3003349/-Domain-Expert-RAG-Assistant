@@ -1,0 +1,50 @@
+[
+  {
+    "id": "q1",
+    "question": "What is the SITE method?",
+    "keywords": ["symbolic identification of tensor equations", "multidimensional physical fields", "plasmid", "host", "evolutionary"],
+    "ground_truth_answer": "SITE stands for Symbolic Identification of Tensor Equations, an evolutionary machine-learning framework designed for discovering tensor equations in multidimensional physical fields using interacting host and plasmid populations."
+  },
+  {
+    "id": "q2",
+    "question": "How do the plasmid population and host population interact in SITE?",
+    "keywords": ["host population", "plasmid population", "fitness", "modification", "crossover", "linkage integrity"],
+    "ground_truth_answer": "In SITE, the host population is evaluated and selected based on fitness, undergoing both modification and crossover operations. The plasmid population does not undergo direct evaluation or selection; it evolves solely through modification to maintain linkage integrity with hosts and assist host evaluation."
+  },
+  {
+    "id": "q3",
+    "question": "What is the loss function used for tensor symbol regression in SITE?",
+    "keywords": ["loss function", "y_{ij}", "ndim", "squared l2 norm", "relative error"],
+    "ground_truth_answer": "The tensor regression loss function is defined as L(y_{ij}, \\hat{y}_{ij}) = \\sum_{i=1}^{ndim} \\sum_{j=1}^{ndim} \\frac{(\\hat{y}_{ij} - y_{ij})^2}{y_{ij}^2}, representing the sum of squared relative errors across all tensor components."
+  },
+  {
+    "id": "q4",
+    "question": "Why does SITE retain unexpressed plasmids?",
+    "keywords": ["unexpressed plasmids", "genetic diversity", "premature loss", "sub-expressions", "robustness"],
+    "ground_truth_answer": "SITE retains unexpressed plasmids temporarily suppressed by genetic operations rather than destroying them in order to enhance robustness, preserve genetic diversity, and prevent the premature loss of potentially useful sub-expressions."
+  },
+  {
+    "id": "q5",
+    "question": "What physical constraint does SITE enforce using SI base quantities?",
+    "keywords": ["dimensional homogeneity", "fundamental physical constraint", "si base quantities", "mass", "length", "time"],
+    "ground_truth_answer": "SITE enforces dimensional homogeneity as a fundamental physical constraint across all candidate equations using the seven SI base quantities: mass (M), length (L), time (T), electric current (I), thermodynamic temperature, amount of substance, and luminous intensity."
+  },
+  {
+    "id": "q6",
+    "question": "What selection strategy does SITE employ for host individuals?",
+    "keywords": ["hybrid strategy", "elitism", "tournament selection", "elites", "ferreira"],
+    "ground_truth_answer": "SITE uses a hybrid selection strategy combining elitism and tournament selection (Ferreira, 2001), where elite individuals are retained directly while the remainder undergo genetic operators."
+  },
+  {
+    "id": "q7",
+    "question": "How does SITE address magnitude variation across tensor components?",
+    "keywords": ["magnitude", "tensor components", "relative error", "order of magnitude", "normalizes"],
+    "ground_truth_answer": "SITE normalizes component residuals by the squared magnitude of target components in its relative error loss function, preventing components with larger magnitudes from dominating the evolutionary selection."
+  },
+  {
+    "id": "q8",
+    "question": "What is the structural role of multi-gene chromosomes in SITE?",
+    "keywords": ["chromosome", "gene", "multi-gene", "representational power"],
+    "ground_truth_answer": "Multi-gene host chromosomes enhance the mathematical representational power of candidate tensor expressions by allowing modular combination of distinct functional gene terms."
+  }
+]
