@@ -12,6 +12,7 @@ export interface Message {
   id: string;
   chat_id: string;
   content: string;
+  thinking?: string;
   role: 'user' | 'assistant';
   created_at: string;
   sources?: Source[];
@@ -138,12 +139,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
         id: 'streaming-assistant',
         chat_id: activeChatId,
         content: '',
+        thinking: '',
         role: 'assistant',
         created_at: new Date().toISOString(),
         sources: []
       };
 
       set((state) => ({ messages: [...state.messages, assistantMessage] }));
+
+      let lastRenderTime = 0;
+      const RENDER_THROTTLE_MS = 35; // Cap React state updates to 30fps to avoid DOM/KaTeX thrashing
+
+      const flushUI = (immediate = false) => {
+        const now = Date.now();
+        if (immediate || now - lastRenderTime >= RENDER_THROTTLE_MS) {
+          lastRenderTime = now;
+          set((state) => ({
+            messages: state.messages.map((msg) =>
+              msg.id === 'streaming-assistant' ? { ...assistantMessage } : msg
+            ),
+          }));
+        }
+      };
 
       let buffer = '';
       while (true) {
@@ -164,26 +181,25 @@ export const useChatStore = create<ChatState>((set, get) => ({
             const data = JSON.parse(dataStr);
             if (data.type === 'metadata' && data.sources) {
               assistantMessage.sources = data.sources;
+              flushUI(true);
+            } else if (data.type === 'thinking' && data.chunk) {
+              assistantMessage.thinking = (assistantMessage.thinking || '') + data.chunk;
+              flushUI(false);
             } else if (data.chunk) {
               assistantMessage.content += data.chunk;
+              flushUI(false);
             } else if (data.error) {
               throw new Error(data.error);
             }
-
-            set((state) => ({
-              messages: state.messages.map(msg => 
-                msg.id === 'streaming-assistant' ? { ...assistantMessage } : msg
-              )
-            }));
-
           } catch (e) {
             console.error('SSE Parse Error', e);
           }
         }
       }
 
+      flushUI(true);
       set({ isStreaming: false });
-      get().fetchMessages(activeChatId);
+      await get().fetchMessages(activeChatId);
 
     } catch (error: any) {
       set({ error: 'The neural void disconnected', isStreaming: false });

@@ -3,29 +3,65 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { motion } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Copy, Check, Database, FileText, Tag, Cpu, CheckCircle2 } from 'lucide-react';
-import { SourceCard } from './SourceCard';
+import { Copy, Check, FileText, ChevronDown, Sparkles } from 'lucide-react';
 import { type Source } from '@/store/useChatStore';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function normalizeLatex(text: string): string {
+  if (!text) return '';
+  return text
+    // Convert display math \[ ... \] to $$ ... $$
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, formula) => `\n\n$$\n${formula.trim()}\n$$\n\n`)
+    // Convert inline math \( ... \) to $ ... $
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, formula) => `$${formula.trim()}$`);
+}
+
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
+  thinking?: string;
   isStreaming?: boolean;
   sources?: Source[];
 }
 
-export const MessageBubble = ({ role, content, isStreaming, sources }: MessageBubbleProps) => {
+export const MessageBubble = ({ role, content, thinking, isStreaming, sources }: MessageBubbleProps) => {
   const isUser = role === 'user';
   const [copied, setCopied] = React.useState(false);
+
+  // Separate thinking and content (support explicit thinking prop or fallback legacy extraction)
+  let displayContent = content || '';
+  let displayThinking = thinking || '';
+
+  if (!displayThinking && content && content.includes('*Thinking Process:*')) {
+    const parts = content.split(/\n\n---\n\n/);
+    if (parts.length > 1) {
+      displayThinking = parts[0]
+        .replace(/^>\s*\*Thinking Process:\*\s*/i, '')
+        .replace(/^>\s?/gm, '')
+        .trim();
+      displayContent = parts.slice(1).join('\n\n---\n\n').trim();
+    }
+  }
+
+  // Thinking dropdown state
+  const [isThinkingOpen, setIsThinkingOpen] = React.useState(false);
+
+  // Auto-expand while model is reasoning and response content has not arrived yet
+  React.useEffect(() => {
+    if (isStreaming && displayThinking && !displayContent) {
+      setIsThinkingOpen(true);
+    }
+  }, [isStreaming, displayThinking, displayContent]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -46,7 +82,7 @@ export const MessageBubble = ({ role, content, isStreaming, sources }: MessageBu
       {/* Assistant Logo Circle */}
       {!isUser && (
         <div className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-white font-bold text-xs shrink-0 mt-1 shadow-sm">
-          O
+          A
         </div>
       )}
 
@@ -56,23 +92,68 @@ export const MessageBubble = ({ role, content, isStreaming, sources }: MessageBu
           ? "bg-white text-slate-900 border border-slate-200 shadow-xs rounded-tr-none" 
           : "bg-white border border-slate-200 shadow-xs text-slate-800 rounded-tl-none"
       )}>
+        {/* Loading state before thinking or content starts */}
+        {!isUser && isStreaming && !displayThinking && !displayContent && (
+          <div className="flex items-center gap-3 text-slate-500 font-medium text-xs my-2">
+            <span className="animate-pulse">Searching knowledge vault...</span>
+            <div className="flex gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce" />
+            </div>
+          </div>
+        )}
+
+        {/* Collapsible Thinking Process Section */}
+        {!isUser && displayThinking && (
+          <div className="mb-4 rounded-xl border border-slate-200/90 bg-slate-50/80 overflow-hidden text-xs transition-all">
+            <button
+              type="button"
+              onClick={() => setIsThinkingOpen(!isThinkingOpen)}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-colors text-left font-sans"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles size={14} className={cn("text-blue-600", isStreaming && !displayContent ? "animate-spin" : "")} />
+                <span className="font-semibold text-slate-700">
+                  {isStreaming && !displayContent ? "Reasoning & Analyzing Documents..." : "Thinking Process"}
+                </span>
+                {displayThinking && !isStreaming && (
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    ({displayThinking.split(/\s+/).filter(Boolean).length} words)
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-medium">
+                <span>{isThinkingOpen ? "Hide" : "Show"}</span>
+                <ChevronDown size={14} className={cn("transition-transform duration-200", isThinkingOpen ? "rotate-180" : "")} />
+              </div>
+            </button>
+
+            {isThinkingOpen && (
+              <div className="px-4 py-3 border-t border-slate-200/70 bg-white/80 max-h-72 overflow-y-auto custom-scrollbar font-sans text-xs text-slate-600 leading-relaxed border-l-2 border-l-blue-500">
+                <div className="prose prose-xs max-w-none text-slate-600 prose-p:my-1.5 prose-ul:my-1.5 whitespace-pre-wrap">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {normalizeLatex(displayThinking)}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Main Response Content */}
         <div className={cn(
-          "text-[14px] leading-relaxed prose max-w-none prose-headings:text-slate-900 prose-headings:font-bold prose-headings:mt-6 prose-headings:mb-3",
+          "text-[14px] leading-relaxed prose max-w-none prose-headings:text-slate-900 prose-headings:font-bold prose-headings:mt-4 prose-headings:mb-2",
           isUser ? "text-slate-900" : "text-slate-800"
         )}>
-          {!isUser && isStreaming && content === '' ? (
-            <div className="flex items-center gap-3 text-slate-500 font-medium text-xs my-2">
-              <span className="animate-pulse">Searching active sources...</span>
-              <div className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.3s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce [animation-delay:-0.15s]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-bounce" />
-              </div>
-            </div>
-          ) : (
+          {displayContent ? (
             <div className="space-y-4">
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
                 components={{
                   h2({ children }) {
                     return (
@@ -135,48 +216,30 @@ export const MessageBubble = ({ role, content, isStreaming, sources }: MessageBu
                   }
                 }}
               >
-                {content}
+                {normalizeLatex(displayContent)}
               </ReactMarkdown>
             </div>
-          )}
+          ) : isStreaming && displayThinking ? (
+            <div className="text-xs text-slate-400 italic">Synthesizing final domain response...</div>
+          ) : null}
         </div>
 
         {/* Source Citation Pills */}
         {!isUser && sources && sources.length > 0 && (
-          <div className="mt-5 pt-4 border-t border-slate-100 space-y-3">
+          <div className="mt-5 pt-4 border-t border-slate-100">
             <div className="flex flex-wrap gap-2">
               {sources.map((source, idx) => (
                 <div 
                   key={source.id || idx}
-                  className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 text-xs py-1 px-3 rounded-full hover:border-slate-300 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 text-xs py-1 px-3 rounded-full"
                 >
                   <FileText size={12} className="text-slate-400" />
                   <span className="font-medium">{source.filename}</span>
-                  {source.page_number && <span className="text-[10px] text-slate-400 font-mono">p.{source.page_number}</span>}
+                  {source.page_number && source.page_number !== 'N/A' && (
+                    <span className="text-[10px] text-slate-400 font-mono">p.{source.page_number}</span>
+                  )}
                 </div>
               ))}
-            </div>
-
-            {/* Agent Trace Block */}
-            <div className="bg-slate-50 border border-slate-200/70 rounded-xl p-3.5 space-y-2 mt-3">
-              <div className="text-[11px] font-semibold text-slate-500">Agent trace</div>
-              <ul className="text-xs text-slate-600 space-y-1.5 pl-1">
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                  <span className="font-medium text-slate-900">Research agent</span>
-                  <span className="text-slate-400">retrieved {sources.length} docs</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                  <span className="font-medium text-slate-900">Engineer agent</span>
-                  <span className="text-slate-400">synthesized steps</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />
-                  <span className="font-medium text-slate-900">QA agent</span>
-                  <span className="text-slate-400">verified accuracy</span>
-                </li>
-              </ul>
             </div>
           </div>
         )}
@@ -185,10 +248,9 @@ export const MessageBubble = ({ role, content, isStreaming, sources }: MessageBu
       {/* User Avatar Circle */}
       {isUser && (
         <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0 mt-1">
-          A
+          U
         </div>
       )}
     </motion.div>
   );
 };
-
