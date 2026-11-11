@@ -172,24 +172,35 @@ async def stream_chat_response(
     from app.crud.message import message as message_crud
 
     response_content = ""
+    thinking_content = ""
+    sources_data = []
 
     try:
         from app.services.rag_service import get_rag_service
-        rag_service = RAGService()
+        rag_service = get_rag_service()
         async for item in rag_service.stream_response(
             message=user_content,
             user_id=user_id,
             chat_id=chat_id,
         ):
             if isinstance(item, dict):
-                # Send metadata packet
+                item_type = item.get("type")
+                if item_type == "metadata":
+                    sources_data = item.get("sources", [])
+                elif item_type == "thinking":
+                    thinking_content += item.get("chunk", "")
+                # Send structured event packet (metadata / thinking)
                 yield f"data: {json.dumps(item)}\n\n"
             else:
-                response_content += item
+                response_content += str(item)
                 # Send text chunk packet
-                yield f"data: {json.dumps({'chunk': item})}\n\n"
+                yield f"data: {json.dumps({'chunk': str(item)})}\n\n"
 
-        # Save complete message to database
+        # Save complete message with separated citations and thinking metadata
+        metadata_payload = {
+            "sources": sources_data,
+            "thinking": thinking_content if thinking_content else None,
+        }
         async with get_async_session() as db:
             await message_crud.create(
                 db,
@@ -197,6 +208,7 @@ async def stream_chat_response(
                     "content": response_content,
                     "chat_id": chat_id,
                     "role": MessageRole.ASSISTANT,
+                    "citations": metadata_payload,
                 }
             )
             await db.commit()
