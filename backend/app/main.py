@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import sys
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -35,8 +36,30 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as e:
         logging.warning(f"Failed to initialize rate limiter: {e}. Running without rate limits.")
 
+    warmup_task = None
+    if "pytest" not in sys.modules:
+        async def _warmup() -> None:
+            try:
+                from app.services.rag_service import get_rag_service
+                rag = await asyncio.to_thread(get_rag_service)
+                await rag.embed_model.aget_query_embedding("warmup")
+                await rag.llm.async_client.chat(
+                    model=rag.llm.model,
+                    messages=[{"role": "user", "content": "ok"}],
+                    stream=False,
+                    think=rag.llm.thinking,
+                    keep_alive=rag.llm.keep_alive,
+                    options={"num_ctx": rag.llm.context_window, "num_predict": 1, **rag.llm.additional_kwargs},
+                )
+                logging.info("RAG models warmed in VRAM/CPU")
+            except Exception as e:
+                logging.warning(f"RAG warmup skipped: {e}")
+        warmup_task = asyncio.create_task(_warmup())
+
     yield
 
+    if warmup_task and not warmup_task.done():
+        warmup_task.cancel()
     # Cleanup
     await async_engine.dispose()
 
