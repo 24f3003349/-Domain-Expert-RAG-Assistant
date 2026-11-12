@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { RightDataSourcesPanel } from '@/components/dashboard/RightDataSourcesPanel';
@@ -8,14 +8,22 @@ import { OverviewView } from '@/components/dashboard/OverviewView';
 import { SourcesView } from '@/components/dashboard/SourcesView';
 import { VaultModal } from '@/components/vault/VaultModal';
 import { useDocumentStore } from '@/store/useDocumentStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isModalOpen, closeModal, openModal } = useDocumentStore();
-  const [activeTab, setActiveTab] = useState<'chat' | 'overview' | 'sources' | 'agents' | 'settings'>('chat');
+  const { isModalOpen, closeModal, openModal, fetchDocuments } = useDocumentStore();
+  const { isAuthenticated } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<'chat' | 'overview' | 'sources'>('chat');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchDocuments();
+    }
+  }, [isAuthenticated, fetchDocuments]);
 
   return (
     <ProtectedRoute>
@@ -34,7 +42,7 @@ export default function DashboardLayout({
           )}
         </main>
 
-        {/* Right Data Sources Side Panel (Screenshot 1 & 2) */}
+        {/* Right Data Sources Side Panel */}
         {activeTab === 'chat' && <RightDataSourcesPanel onAddClick={openModal} />}
 
         {/* Global Vault Modal */}
@@ -43,5 +51,3 @@ export default function DashboardLayout({
     </ProtectedRoute>
   );
 }
-
-

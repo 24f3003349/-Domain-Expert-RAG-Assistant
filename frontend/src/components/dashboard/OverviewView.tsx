@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Download, TrendingUp, MessageSquare, Layers, FileText, CheckCircle2 } from 'lucide-react';
+import { Calendar, MessageSquare, Layers, FileText, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useChatStore } from '@/store/useChatStore';
 import { useDocumentStore } from '@/store/useDocumentStore';
@@ -99,7 +99,7 @@ export const OverviewView = () => {
             <p className="text-xl font-extrabold text-slate-900 tracking-tight mt-1">ChromaDB</p>
           </div>
           <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 size={14} /> Nomic Embeddings
+            <CheckCircle2 size={14} /> Nomic + BM25 + FlashRank
           </p>
         </motion.div>
       </motion.div>

@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Plus, MessageSquare, LayoutDashboard, Database, Users, Settings, LogOut, Layers } from 'lucide-react';
+import { Plus, MessageSquare, LayoutDashboard, Database, LogOut, Layers } from 'lucide-react';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useDocumentStore } from '@/store/useDocumentStore';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -16,13 +14,12 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export interface SidebarProps {
-  activeTab?: 'chat' | 'overview' | 'sources' | 'agents' | 'settings';
-  onTabChange?: (tab: 'chat' | 'overview' | 'sources' | 'agents' | 'settings') => void;
+  activeTab?: 'chat' | 'overview' | 'sources';
+  onTabChange?: (tab: 'chat' | 'overview' | 'sources') => void;
 }
 
 export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
   const { chats, fetchChats, createChat, isLoading } = useChatStore();
-  const { openModal } = useDocumentStore();
   const { user, logout } = useAuthStore();
   const params = useParams();
   const router = useRouter();
@@ -45,8 +42,6 @@ export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
     { id: 'chat', label: 'Chat', icon: MessageSquare },
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'sources', label: 'Sources', icon: Database },
-    { id: 'agents', label: 'Agents', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ] as const;
 
   return (
@@ -139,11 +134,11 @@ export const Sidebar = ({ activeTab = 'chat', onTabChange }: SidebarProps) => {
       <div className="p-3 bg-slate-50/70 border-t border-slate-200">
         <div className="flex items-center gap-2.5 p-1.5 rounded-lg">
           <div className="w-7 h-7 rounded-full bg-blue-100 border border-blue-200 flex items-center justify-center text-xs font-bold text-blue-700">
-            {user?.email?.substring(0, 1).toUpperCase() || 'A'}
+            {user?.email?.substring(0, 1).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-slate-900 truncate">{user?.email ? user.email.split('@')[0] : 'User'}</p>
-            <p className="text-[10px] text-slate-500">Domain Expert</p>
+            <p className="text-[10px] text-slate-500 truncate">{user?.email || 'Authenticated'}</p>
           </div>
           <motion.button
             whileTap={{ scale: 0.9 }}

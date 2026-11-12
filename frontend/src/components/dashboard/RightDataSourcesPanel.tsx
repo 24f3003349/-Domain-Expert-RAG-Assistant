@@ -1,18 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Plus, FileText, Globe, Database, ChevronDown, CheckCircle2 } from 'lucide-react';
-import { useDocumentStore } from '@/store/useDocumentStore';
+import React from 'react';
+import { Plus, FileText, Cpu } from 'lucide-react';
+import { useDocumentStore, type DocumentStatus } from '@/store/useDocumentStore';
 
 interface RightDataSourcesPanelProps {
   onAddClick?: () => void;
 }
 
+const statusDotColor: Record<DocumentStatus, string> = {
+  COMPLETED: 'bg-emerald-500',
+  PROCESSING: 'bg-blue-500 animate-pulse',
+  PENDING: 'bg-amber-400 animate-pulse',
+  FAILED: 'bg-rose-500',
+};
+
 export const RightDataSourcesPanel = ({ onAddClick }: RightDataSourcesPanelProps) => {
   const { documents, openModal } = useDocumentStore();
-  const [selectedModel, setSelectedModel] = useState('Ollama granite4.2:8b');
-
   const handleAdd = onAddClick || openModal;
+
+  const completedCount = documents.filter((d) => d.status === 'COMPLETED').length;
 
   return (
     <aside className="w-80 h-full bg-white border-l border-slate-200 flex flex-col justify-between shrink-0 hidden xl:flex">
@@ -30,85 +37,94 @@ export const RightDataSourcesPanel = ({ onAddClick }: RightDataSourcesPanelProps
 
       {/* Main Sources List Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-        {/* Connected Sources */}
+        {/* Active Vault Summary */}
         <div className="space-y-3">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Active Vault</p>
 
-          <div className="space-y-2">
-            <div className="p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-between group hover:border-slate-300 transition-all">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-                  <FileText size={16} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">PDF Vault Documents</p>
-                  <p className="text-[11px] text-slate-400">{documents.length} files indexed</p>
-                </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="w-full text-left p-3 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center justify-between group hover:border-slate-300 transition-all"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
+                <FileText size={16} />
               </div>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Connected" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-slate-900 truncate">PDF Vault Documents</p>
+                <p className="text-[11px] text-slate-400">
+                  {completedCount} of {documents.length} {documents.length === 1 ? 'file' : 'files'} indexed
+                </p>
+              </div>
             </div>
-          </div>
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${completedCount > 0 ? 'bg-emerald-500' : 'bg-slate-300'}`}
+              title={completedCount > 0 ? 'Active' : 'Empty'}
+            />
+          </button>
         </div>
 
-        {/* Available Sources */}
+        {/* Real Uploaded Documents List */}
         <div className="space-y-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Planned Integrations</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
+            Connected Files ({documents.length})
+          </p>
 
-          <div className="space-y-2 opacity-70">
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-slate-100 text-slate-500">
-                  <FileText size={16} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-700 truncate">Domain Specifications</p>
-                  <p className="text-[11px] text-slate-400">Roadmap</p>
-                </div>
-              </div>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
+          {documents.length === 0 ? (
+            <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-2">
+              <p className="text-xs text-slate-500">No PDF files uploaded yet.</p>
+              <button
+                type="button"
+                onClick={handleAdd}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Upload a PDF to start →
+              </button>
             </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-slate-100 text-slate-500">
-                  <Globe size={16} />
+          ) : (
+            <div className="space-y-2">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  onClick={handleAdd}
+                  className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between gap-2 hover:border-slate-300 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 rounded-lg bg-white border border-slate-200 text-blue-600 shrink-0">
+                      <FileText size={14} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 truncate" title={doc.filename}>
+                        {doc.filename}
+                      </p>
+                      <p className="text-[10px] text-slate-400 uppercase font-medium">
+                        {(doc.file_size / (1024 * 1024)).toFixed(2)} MB • {doc.status}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${statusDotColor[doc.status]}`}
+                    title={doc.status}
+                  />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-700 truncate">Web Crawler Index</p>
-                  <p className="text-[11px] text-slate-400">Roadmap</p>
-                </div>
-              </div>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
+              ))}
             </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-slate-100 text-slate-500">
-                  <Database size={16} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-700 truncate">PostgreSQL Connector</p>
-                  <p className="text-[11px] text-slate-400">Roadmap</p>
-                </div>
-              </div>
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0" />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Bottom Model Selector */}
+      {/* Bottom Engine Status (Static truth matching backend configuration) */}
       <div className="p-4 border-t border-slate-200 bg-slate-50/50">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Active LLM Engine</p>
-        <div className="relative">
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 shadow-2xs focus:outline-none focus:border-slate-400 pr-8 cursor-pointer"
-          >
-            <option value="Ollama granite4.2:8b">Ollama granite4.2:8b (Active)</option>
-          </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Active RAG Pipeline</p>
+        <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <Cpu size={14} className="text-blue-600 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-800 truncate">granite4.2:8b</p>
+              <p className="text-[10px] text-slate-400 truncate">BM25 + Chroma + FlashRank</p>
+            </div>
+          </div>
+          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Local Ollama" />
         </div>
       </div>
     </aside>

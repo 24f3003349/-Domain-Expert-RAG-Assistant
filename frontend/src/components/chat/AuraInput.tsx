@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Paperclip, Loader2, AtSign } from 'lucide-react';
+import { ArrowUp, Paperclip, Loader2 } from 'lucide-react';
 import { useDocumentStore } from '@/store/useDocumentStore';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -88,9 +88,6 @@ export const AuraInput = ({ onSend, isLoading }: AuraInputProps) => {
           </motion.button>
         </div>
       </div>
-      <p className="text-[11px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
-        <AtSign size={12} className="text-slate-400" /> Use <span className="font-semibold text-slate-600">@mention</span> a source to narrow the search
-      </p>
     </div>
   );
 };
