@@ -24,10 +24,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear storage and redirect on unauthorized
+      // Clear storage and redirect on unauthorized (skip if already on /login or calling login endpoint)
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (!isLoginRequest) {
+          localStorage.removeItem('auth_token');
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        }
       }
     }
     return Promise.reject(error);
